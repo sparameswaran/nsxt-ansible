@@ -1,0 +1,18 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: NSX-T Fabric Node
+      nsxt_fabric_node:
+        display_name: "ESX1"
+        ip_address: "10.29.12.207"
+        node_username: "root"
+        node_passwd: 'VMware1!'
+        thumbprint: "49:AC:C6:D7:29:25:BA:CC:E5:95:5C:5F:BB:F6:46:AF:C2:E0:4B:79:71:F4:8D:9B:5C:79:11:63:2D:5B:E3:67"
+        state: absent
+        nsx_manager: "10.29.12.209"
+        nsx_username: "admin"
+        nsx_passwd: 'VMware1!'
+      register: fnode
+  tags: fnode

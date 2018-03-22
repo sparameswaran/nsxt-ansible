@@ -1,0 +1,23 @@
+[localhost]
+localhost       ansible_connection=local
+
+[jumphost]
+10.29.12.220 		ansible_ssh_host=10.29.12.220		ansible_ssh_user=root ansible_ssh_pass=VMware1!
+
+[nsxmanagers]
+nsx-manager 		ansible_ssh_host=10.29.12.209		ansible_ssh_user=root ansible_ssh_pass=VMware1!
+
+[nsxcontrollers]
+nsx-controller01	ansible_ssh_host=10.29.12.221		ansible_ssh_user=root ansible_ssh_pass=VMware1!
+nsx-controller02	ansible_ssh_host=10.29.12.222		ansible_ssh_user=root ansible_ssh_pass=VMware1!
+nsx-controller03	ansible_ssh_host=10.29.12.203		ansible_ssh_user=root ansible_ssh_pass=VMware1!
+
+[nsxedges]
+nsx-edge1		ansible_ssh_host=10.29.12.199		ansible_ssh_user=root ansible_ssh_pass=VMware1!
+#nsx-edge2		ansible_ssh_host=10.29.12.215		ansible_ssh_user=root ansible_ssh_pass=VMware1!
+
+[nsxtransportnodes]
+esx3		ansible_ssh_host=10.29.12.207		ansible_ssh_user=root ansible_ssh_pass=VMware1!
+esx4		ansible_ssh_host=10.29.12.208		ansible_ssh_user=root ansible_ssh_pass=VMware1!
+
+
