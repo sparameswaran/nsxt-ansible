@@ -48,7 +48,14 @@ def listNodes(module, stub_config):
     return fabricnodes_svc.list()
 
 
-def createNode(module, os_type, os_ver, stub_config):
+def createNode(module, stub_config):
+    if module.params['os_type'] == "ESXI":
+        os_type=HostNode.OS_TYPE_ESXI
+    elif module.params['os_type'] == "RHEL":
+        os_type=HostNode.OS_TYPE_RHELKVM
+    elif module.params['os_type'] == "UBUNTU":
+        os_type=HostNode.OS_TYPE_UBUNTUKVM
+
     ip_addr = []
     ip_addr.append(module.params['ip_address'])
     fnodes_svc = Nodes(stub_config)
@@ -56,7 +63,7 @@ def createNode(module, os_type, os_ver, stub_config):
 	display_name=module.params['display_name'],
 	ip_addresses=ip_addr,
 	os_type=os_type,
-	os_version=os_ver,
+	os_version=module.params['os_version'],
 	host_credential=HostNodeLoginCredential(
             username=module.params['node_username'], 
             password=module.params['node_passwd'], 
@@ -118,6 +125,8 @@ def main():
             node_username=dict(required=False, type='str'),
             node_passwd=dict(required=False, type='str', no_log=True),
             thumbprint=dict(required=False, type='str', no_log=True),
+            os_type=dict(required=True, type='str'),
+            os_version=dict(required=True, type='str'),
             state=dict(required=False, type='str', default="present"),
             nsx_manager=dict(required=True, type='str'),
             nsx_username=dict(required=True, type='str'),
@@ -140,10 +149,10 @@ def main():
     if module.params['state'] == "present":
         node = getNodeByName(module, stub_config)
         if node is None:
-            result = createNode(module, os_type, os_version, stub_config)
-            module.exit_json(changed=True, object_name=module.params['display_name'], body=str(result))
+            result = createNode(module, stub_config)
+            module.exit_json(changed=True, id=result.id, object_name=module.params['display_name'], body=str(result))
         else:
-            module.exit_json(changed=False, object_name=module.params['display_name'], message="Node with name %s already exists!"%(module.params['display_name']))
+            module.exit_json(changed=False, id=node.id, object_name=module.params['display_name'], message="Node with name %s already exists!"%(module.params['display_name']))
 
     elif module.params['state'] == "absent":
         node = getNodeByName(module, stub_config)

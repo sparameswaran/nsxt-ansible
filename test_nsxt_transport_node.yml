@@ -1,0 +1,25 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: NSX-T Fabric Node
+      nsxt_transport_node:
+        display_name: "ESX1"
+        node_id: "ae941269-042d-47e2-897c-9095780d5d9c"
+        maintenance_mode: disabled
+        static_ip_pool_id: "097b2a6e-a28a-4482-9fb6-f6dd72e18104"
+        host_switch_name: hs1
+        transport_zone_endpoints: 
+          - ESXi-MNGMT-TZ
+          - tz1
+        pnics:
+          uplink-1: vmnic3
+          uplink-2: vmnic4
+        uplink_profile: custom-uplink-profile
+        state: present
+        nsx_manager: "10.29.12.209"
+        nsx_username: "admin"
+        nsx_passwd: 'VMware1!'
+      register: fnode
+  tags: fnode
