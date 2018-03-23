@@ -120,6 +120,58 @@ def createTransportNode(module, stub_config):
         module.exit_json(changed=False, message="API Error creating Transport Node: %s "%(api_error))
     return rs
 
+
+def updateTransportNode(module, stub_config):
+    changed = False
+    node = getTransportNodeByName(module, stub_config)
+
+    pnic_list = []
+    for key, value in module.params["pnics"].items():
+        pnic=Pnic(device_name=value, uplink_name=key)
+        pnic_list.append(pnic)
+
+    if pnic_list != node.host_switches[0].pnics:
+        changed = True
+
+    tz_endpoints=getTransportZoneEndPoint(module, stub_config)
+    if len(tz_endpoints) != len(node.transport_zone_endpoints):
+        changed = True
+    isThere = False
+    uplink_profile_id=getUplinkProfileId(module, stub_config)
+    for prof_id in node.host_switches[0].host_switch_profile_ids:
+        if uplink_profile_id == prof_id.value:
+            isThere = True
+    if not isThere:
+        changed = True
+    if node.host_switches[0].static_ip_pool_id != module.params["static_ip_pool_id"]:
+        changed = True
+    if changed:
+        hsptie=HostSwitchProfileTypeIdEntry(
+            key=HostSwitchProfileTypeIdEntry.KEY_UPLINKHOSTSWITCHPROFILE,
+            value=uplink_profile_id
+        )
+        hsprof_list = []
+        hsprof_list.append(hsptie)
+
+        hs=HostSwitch(
+            host_switch_name=module.params["host_switch_name"],
+            host_switch_profile_ids=hsprof_list,
+            pnics=pnic_list,
+            static_ip_pool_id=module.params["static_ip_pool_id"]
+        )
+        hs_list= []
+        hs_list.append(hs)
+        tn_svc = TransportNodes(stub_config)
+        node.host_switches=hs_list
+        node.transport_zone_endpoints=tz_endpoints
+        try:
+            rs = tn_svc.update(node.id, node)
+        except Error as ex:
+            api_error = ex.data.convert_to(ApiError)
+            module.exit_json(changed=False, message="API Error updating Transport Node: %s "%(api_error))
+    return changed
+
+
 def checkTnodeStatus(tnode, stub_config):
     time.sleep(5)
     state_svc = State(stub_config)
@@ -161,6 +213,16 @@ def deleteTransportNode(module, node, stub_config):
     time.sleep(5)
     module.exit_json(changed=True, id=node.id, object_name=node_name)
 
+#def updateMaintenanceMode(desired, node, stub_config):
+#    action = TransportNode.MAINTENANCE_MODE_DISABLED
+#    if desired.upper() == "ENABLED":
+#        action = TransportNode.MAINTENANCE_MODE_ENABLED
+#    elif desired.upper() == "FORCE_ENABLED":
+#        action = TransportNode.MAINTENANCE_MODE_FORCE_ENABLED
+#    action="ENABLED"
+#    tn_svc = TransportNodes(stub_config)
+#    tn_svc.updatemaintenancemode(node.id, action)
+
 
 
 def main():
@@ -193,16 +255,21 @@ def main():
     security_context = create_user_password_security_context(module.params["nsx_username"], module.params["nsx_passwd"])
     connector.set_security_context(security_context)
     requests.packages.urllib3.disable_warnings()
-#
-#  TODO: Compare different parameters on UPDATE
-#
+
     if module.params['state'] == "present":
         node = getTransportNodeByName(module, stub_config)
         if node is None:
             result = createTransportNode(module, stub_config)
             module.exit_json(changed=True, object_name=module.params['display_name'], id=result.id, body=str(result))
         else:
-            module.exit_json(changed=False, object_name=module.params['display_name'], id=node.id, message="Transport Node with name %s already exists!"%(module.params['display_name']))
+            changed = False
+#            if module.params["maintenance_mode"]:
+#                if module.params["maintenance_mode"].upper() != node.maintenance_mode:
+#                    changed = True
+#                    updateMaintenanceMode(module.params["maintenance_mode"], node, stub_config)
+#
+            changed=updateTransportNode(module, stub_config)
+            module.exit_json(changed=changed, object_name=module.params['display_name'], id=node.id, message="Transport Node with name %s already exists!"%(module.params['display_name']))
 
     elif module.params['state'] == "absent":
         node = getTransportNodeByName(module, stub_config)
