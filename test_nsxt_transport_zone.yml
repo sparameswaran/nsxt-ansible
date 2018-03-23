@@ -1,0 +1,20 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: NSX-T Transport Zone
+      nsxt_transport_zone:
+        display_name: "testTZ"
+        description: "My Test Transport Zone"
+        host_switch_name: "hs1"
+        transport_type: 'OVERLAY'
+        tags:
+          project: demo
+          ncp/cluster: k8s-cluster1
+        state: present
+        nsx_manager: "10.29.12.209"
+        nsx_username: "admin"
+        nsx_passwd: 'VMware1!'
+      register: tzone
+  tags: tzone
