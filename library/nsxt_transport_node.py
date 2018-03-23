@@ -22,9 +22,7 @@ __author__ = 'yasensim'
 
 import requests, time
 try:
-    from com.vmware.nsx.fabric.nodes_client import Status
-#    from com.vmware.nsx.fabric_client import Nodes
-#    from com.vmware.nsx.model_client import Node
+    from com.vmware.nsx.transport_nodes_client import State
     from com.vmware.nsx.model_client import HostNode
     from com.vmware.nsx_client import TransportNodes
     from com.vmware.nsx_client import TransportZones
@@ -112,10 +110,26 @@ def createTransportNode(module, stub_config):
     )
     try:
         rs = tn_svc.create(transport_node)
+        tnode_status = checkTnodeStatus(rs, stub_config)
+        if tnode_status == "UP":
+            return rs
+        elif tnode_status == "DOWN":
+            module.fail_json(msg='Transport Node %s Status is Down!'%(module.params["display_name"]))
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.exit_json(changed=False, message="API Error creating Transport Node: "%(api_error))
+        module.exit_json(changed=False, message="API Error creating Transport Node: %s "%(api_error))
     return rs
+
+def checkTnodeStatus(tnode, stub_config):
+    time.sleep(5)
+    state_svc = State(stub_config)
+    counter = 10
+    while (state_svc.get(tnode.id)).state != "success":
+        counter=counter-1
+        time.sleep(5)
+        if counter == 0:
+            return "DOWN"
+    return "UP"
 
 
 def listTransportNodes(module, stub_config):
@@ -144,7 +158,7 @@ def deleteTransportNode(module, node, stub_config):
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
         module.fail_json(msg='API Error Deleting node: %s'%(api_error.error_message))
-    time.sleep(10)
+    time.sleep(5)
     module.exit_json(changed=True, id=node.id, object_name=node_name)
 
 
@@ -180,8 +194,8 @@ def main():
     connector.set_security_context(security_context)
     requests.packages.urllib3.disable_warnings()
 #
-# TODO: Check Transport Node STATUS before exit on creation and deletion
-#  Compate different parameters on UPDATE
+#  TODO: Compare different parameters on UPDATE
+#
     if module.params['state'] == "present":
         node = getTransportNodeByName(module, stub_config)
         if node is None:
