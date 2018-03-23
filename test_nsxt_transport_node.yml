@@ -3,7 +3,7 @@
   connection: local
   gather_facts: False
   tasks:
-    - name: NSX-T Fabric Node
+    - name: NSX-T Transport Node
       nsxt_transport_node:
         display_name: "ESX1"
         node_id: "ae941269-042d-47e2-897c-9095780d5d9c"
@@ -15,11 +15,11 @@
           - tz1
         pnics:
           uplink-1: vmnic3
-          uplink-2: vmnic4
+#          uplink-2: vmnic4
         uplink_profile: custom-uplink-profile
         state: present
         nsx_manager: "10.29.12.209"
         nsx_username: "admin"
         nsx_passwd: 'VMware1!'
-      register: fnode
-  tags: fnode
+      register: tnode
+  tags: tnode

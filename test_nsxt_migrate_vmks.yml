@@ -1,0 +1,18 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: NSX-T Migrate VMKs
+      nsxt_migrate_vmks:
+        display_name: "ESX1"
+        vlan_logical_switches: "Management,vMotion,vSan"
+        vmks: "vmk0,vmk1,vmk2"
+        pnics:
+          uplink-1: vmnic3
+          uplink-2: vmnic4
+        nsx_manager: "10.29.12.209"
+        nsx_username: "admin"
+        nsx_passwd: 'VMware1!'
+      register: vmk_migrate
+  tags: vmk_m
