@@ -126,10 +126,16 @@ def main():
                 new_ippool = ippool_svc.create(new_ippool)
                 module.exit_json(changed=True, object_name=module.params['display_name'], id=new_ippool.id, message="IP POOL with name %s created!"%(module.params['display_name']))
         elif ippool:
+            changed = False
             if tags != ippool.tags:
+                changed = True
                 ippool.tags=tags
+            if ippool.subnets != subnet_list:
+                ippool.subnets = subnet_list
+                changed = True
+            if changed:
                 new_ippool = ippool_svc.update(ippool.id, ippool)
-                module.exit_json(changed=True, object_name=module.params['display_name'], id=new_ippool.id, message="IP POOL with name %s has changed tags!"%(module.params['display_name']))
+                module.exit_json(changed=True, object_name=module.params['display_name'], id=ippool.id, msg="IP Pool has been changed")
             module.exit_json(changed=False, object_name=module.params['display_name'], id=ippool.id, message="IP POOL with name %s already exists!"%(module.params['display_name']))
 
     elif module.params['state'] == "absent":

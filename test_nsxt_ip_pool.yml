@@ -26,11 +26,10 @@
               - 10.29.12.201
               - 20.19.12.200
               - 8.8.8.8
-            dns_suffix: "yasen.local"
+            dns_suffix: "corp.local"
             gateway_ip: 192.168.20.1
-
         tags:
-          project: demo
+          project: demo2
           ncp/cluster: k8s-cluster1
         state: present
         nsx_manager: "10.29.12.209"
