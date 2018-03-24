@@ -8,6 +8,17 @@
         display_name: "test-uplink-profile"
         description: "My Test Uplink Profile"
         mtu: 1600
+#        lags: # LAG is not supported for now!!!
+#          - name: 'First Lag'
+#            mode: 'MODE_PASSIVE'
+#            load_balance_algorithm: 'SRCDESTMACIPPORT'
+#            number_of_uplinks: 2
+#            timeout_type: 'SLOW'
+#          - name: 'Second Lag'
+#            mode: 'MODE_PASSIVE'
+#            load_balance_algorithm: 'SRCDESTMACIPPORT'
+#            number_of_uplinks: 2
+#            timeout_type: 'SLOW'
         active_list:
           - uplink-1
           - uplink-2

@@ -22,16 +22,12 @@ __author__ = 'yasensim'
 
 import requests, time
 try:
-    from com.vmware.nsx.model_client import IpPoolSubnet
-    from com.vmware.nsx.model_client import IpPoolRange
-    from com.vmware.nsx.model_client import IpPool
-    from com.vmware.nsx.pools_client import IpPools
     from com.vmware.nsx.model_client import Tag
-
     from com.vmware.nsx_client import HostSwitchProfiles
     from com.vmware.nsx.model_client import UplinkHostSwitchProfile
     from com.vmware.nsx.model_client import TeamingPolicy
     from com.vmware.nsx.model_client import Uplink
+    from com.vmware.nsx.model_client import Lag
 
     from com.vmware.vapi.std.errors_client import NotFound
     from vmware.vapi.lib import connect
@@ -61,6 +57,33 @@ def getProfileByName(module, stub_config):
         if prof.display_name == module.params['display_name']:
             return prof
     return None
+
+def createListOfLags(module, stub_config, active_uplinks):
+    lag_list = []
+    for lag in module.params['lags']:
+        load_balance_algorithm=lag['load_balance_algorithm']
+        mode=lag['mode']
+        name=lag['name']
+        number_of_uplinks=lag['number_of_uplinks']
+        timeout_type=lag['timeout_type']
+        uplinks=active_uplinks
+        if load_balance_algorithm is (not 'SRCMAC' or not 'DESTMAC' or not 'SRCDESTMAC' or not 'SRCDESTIPVLAN' or not 'SRCDESTMACIPPORT'):
+            module.fail_json(msg='%s for load_balance_algorithm is not valid. Valid value is SRCMAC or DESTMAC or SRCDESTMAC or SRCDESTIPVLAN or SRCDESTMACIPPORT '%(load_balance_algorithm))
+        if mode is (not 'ACTIVE' or not 'PASSIVE'):
+            module.fail_json(msg='%s for lag mode is not valid. Valid value is ACTIVE or PASSIVE '%(mode))
+        if timeout_type is (not 'SLOW' or not 'FAST'):
+            module.fail_json(msg='%s for lag timeout_type is not valid. Valid value is SLOW or FAST '%(timeout_type))
+        newLag = Lag(
+            load_balance_algorithm=load_balance_algorithm,
+            mode=mode,
+            name=name,
+            number_of_uplinks=number_of_uplinks,
+            timeout_type=timeout_type,
+            uplinks=active_uplinks
+        )
+        lag_list.append(newLag)
+    return lag_list
+
 
 def main():
     module = AnsibleModule(
@@ -100,14 +123,22 @@ def main():
             tag=Tag(scope=key, tag=value)
             tags.append(tag)
 
+
+    if module.params['policy'] == 'LOADBALANCE_SRCID' and module.params['standby_list']:
+        module.fail_json(msg='With LOADBALANCE_SRCID teaming policy the StandBy List must NOT be defined!!!')
+
     uplink_type=Uplink.UPLINK_TYPE_PNIC
-    if module.params['lags']:
-        uplink_type=Uplink.UPLINK_TYPE_LAG
+#    if module.params['lags']:
+#        uplink_type=Uplink.UPLINK_TYPE_LAG
 
     active_list = []
     for active_uplink in module.params['active_list']:
         uplink = Uplink(active_uplink, uplink_type)
         active_list.append(uplink)
+
+    lag_list = None
+#    if module.params['lags']:
+#        lag_list = createListOfLags(module, stub_config, active_list)
 
     standby_list = []
     for standby_uplink in module.params['standby_list']:
@@ -123,13 +154,17 @@ def main():
             new_prof = UplinkHostSwitchProfile(
                 display_name=module.params['display_name'],
                 description=module.params['description'],
-                lags=module.params['lags'],
+                lags=lag_list,
                 mtu=module.params['mtu'],
                 teaming=teaming,
                 transport_vlan=module.params['transport_vlan'],
                 tags=tags
             )
-            new_prof = hs_profile_svc.create(new_prof)
+            try:
+                new_prof = hs_profile_svc.create(new_prof)
+            except Error as ex:
+                module.fail_json(msg='API Error listing Hostswitch Profiles: %s'%(str(ex)))
+
             created_prof = getProfileByName(module, stub_config)
             module.exit_json(changed=True, object_name=module.params['display_name'], id=created_prof.id, message="Uplink Profile with name %s created!"%(module.params['display_name']))
         elif prof:
@@ -146,6 +181,9 @@ def main():
             if prof.transport_vlan != module.params['transport_vlan']:
                 prof.transport_vlan = module.params['transport_vlan']
                 changed = True
+#            if prof.lags != lag_list:
+#                prof.lags = lag_list
+#                changed = True
             if changed:
                 new_prof = hs_profile_svc.update(prof.id, prof)
                 module.exit_json(changed=True, object_name=module.params['display_name'], id=prof.id, msg="Uplink Profile has been changed")
