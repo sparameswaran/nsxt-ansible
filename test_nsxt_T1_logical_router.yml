@@ -1,0 +1,20 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: NSX-T T1 Logical Router
+      nsxt_logical_router:
+        display_name: "MyT1Router"
+        description: "My Test T1"
+#        edge_cluster_id: f6e31d8e-8054-41e1-a442-911fb0a171f4
+        router_type: 'TIER1'
+        tags:
+          project: demo
+          ncp/cluster: k8s-cluster1
+        state: present
+        nsx_manager: "10.29.12.209"
+        nsx_username: "admin"
+        nsx_passwd: 'VMware1!'
+      register: t0
+  tags: t0
