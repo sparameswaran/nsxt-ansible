@@ -23,7 +23,6 @@ __author__ = 'yasensim'
 import requests, time
 try:
     from com.vmware.nsx.transport_nodes_client import State
-    from com.vmware.nsx.model_client import HostNode
     from com.vmware.nsx_client import TransportNodes
     from com.vmware.nsx_client import TransportZones
     from com.vmware.nsx_client import HostSwitchProfiles
@@ -117,7 +116,7 @@ def createTransportNode(module, stub_config):
             module.fail_json(msg='Transport Node %s Status is Down!'%(module.params["display_name"]))
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.exit_json(changed=False, message="API Error creating Transport Node: %s "%(api_error))
+        module.fail_json(msg="API Error creating Transport Node: %s "%(api_error))
     return rs
 
 
@@ -168,7 +167,7 @@ def updateTransportNode(module, stub_config):
             rs = tn_svc.update(node.id, node)
         except Error as ex:
             api_error = ex.data.convert_to(ApiError)
-            module.exit_json(changed=False, message="API Error updating Transport Node: %s "%(api_error))
+            module.fail_json(msg="API Error updating Transport Node: %s "%(api_error))
     return changed
 
 
@@ -269,7 +268,9 @@ def main():
 #                    updateMaintenanceMode(module.params["maintenance_mode"], node, stub_config)
 #
             changed=updateTransportNode(module, stub_config)
-            module.exit_json(changed=changed, object_name=module.params['display_name'], id=node.id, message="Transport Node with name %s already exists!"%(module.params['display_name']))
+            if changed:
+                module.exit_json(changed=True, object_name=module.params['display_name'], id=node.id, message="Transport Node with name %s has been modified!"%(module.params['display_name']))
+            module.exit_json(changed=False, object_name=module.params['display_name'], id=node.id, message="Transport Node with name %s already exists!"%(module.params['display_name']))
 
     elif module.params['state'] == "absent":
         node = getTransportNodeByName(module, stub_config)
