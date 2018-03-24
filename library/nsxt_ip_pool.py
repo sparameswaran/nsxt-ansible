@@ -24,6 +24,11 @@ import requests, time
 try:
     from com.vmware.nsx_client import TransportZones
     from com.vmware.nsx.model_client import TransportZone
+
+    from com.vmware.nsx.model_client import IpPoolSubnet
+    from com.vmware.nsx.model_client import IpPoolRange
+    from com.vmware.nsx.model_client import IpPool
+    from com.vmware.nsx.pools_client import IpPools
     from com.vmware.nsx.model_client import Tag
 
     from com.vmware.vapi.std.errors_client import NotFound
@@ -37,22 +42,22 @@ try:
 except ImportError:
     HAS_PYNSXT = False
 
-def listTransportZones(module, stub_config):
-    tz_list = []
+def listIpPools(module, stub_config):
+    ippool_list = []
     try:
-        tz_svc = TransportZones(stub_config)
-        tz_list = tz_svc.list()
+        ippool_svc = IpPools(stub_config)
+        ippool_list = ippool_svc.list()
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Transport Zones: %s'%(api_error.error_message))
-    return tz_list
+        module.fail_json(msg='API Error listing IP POOLS: %s'%(api_error.error_message))
+    return ippool_list
 
-def getTransportZoneByName(module, stub_config):
-    result = listTransportZones(module, stub_config)
+def getIpPoolByName(module, stub_config):
+    result = listIpPools(module, stub_config)
     for vs in result.results:
-        tz = vs.convert_to(TransportZone)
-        if tz.display_name == module.params['display_name']:
-            return tz
+        ippool = vs.convert_to(IpPool)
+        if ippool.display_name == module.params['display_name']:
+            return ippool
     return None
 
 def main():
@@ -60,10 +65,7 @@ def main():
         argument_spec=dict(
             display_name=dict(required=True, type='str'),
             description=dict(required=False, type='str', default=None),
-            host_switch_mode=dict(required=False, type='str', default='STANDARD', choices=['STANDARD', 'ENS']),
-            host_switch_name=dict(required=True, type='str'),
-            nested_nsx=dict(required=False, type='bool', default=False),
-            transport_type=dict(required=False, type='str', default='OVERLAY', choices=['OVERLAY', 'VLAN']),
+            subnets=dict(required=True, type='list'),
             tags=dict(required=False, type='dict', default=None),
             state=dict(required=False, type='str', default="present", choices=['present', 'absent']),
             nsx_manager=dict(required=True, type='str'),
@@ -90,32 +92,49 @@ def main():
         for key, value in module.params['tags'].items():
             tag=Tag(scope=key, tag=value)
             tags.append(tag)
-    transportzones_svc = TransportZones(stub_config)
-    tz = getTransportZoneByName(module, stub_config)
+
+
+
+    subnet_list = []
+    for subnet in module.params['subnets']:
+        ip_range_list = []
+        for iprange in subnet['allocation_ranges']:
+            ipr = iprange.split('-')
+            ip_pool_range = IpPoolRange(start=ipr[0], end=ipr[1])
+            ip_range_list.append(ip_pool_range)
+
+        ip_pool_subnet = IpPoolSubnet(
+            allocation_ranges=ip_range_list,
+            cidr=subnet['cidr'],
+            dns_nameservers=subnet['dns_nameservers'],
+            dns_suffix=subnet['dns_suffix'],
+            gateway_ip=subnet['gateway_ip']
+        )
+        subnet_list.append(ip_pool_subnet)
+
+    ippool_svc = IpPools(stub_config)
+    ippool = getIpPoolByName(module, stub_config)
     if module.params['state'] == 'present':
-        if tz is None:
+        if ippool is None:
             if module.params['state'] == "present":
-                new_tz = TransportZone(
-                    transport_type=module.params['transport_type'],
+                new_ippool = IpPool(
                     display_name=module.params['display_name'],
                     description=module.params['description'],
-                    host_switch_name=module.params['host_switch_name'],
-                    host_switch_mode=module.params['host_switch_mode'],
-                    nested_nsx=module.params['nested_nsx'],
+                    subnets=subnet_list,
                     tags=tags
                 )
-                new_tz = transportzones_svc.create(new_tz)
-                module.exit_json(changed=True, object_name=module.params['display_name'], id=new_tz.id, message="Transport Zone with name %s created!"%(module.params['display_name']))
-        elif tz:
-            if tags != tz.tags:
-                tz.tags=tags
-                new_tz = transportzones_svc.update(tz.id, tz)
-                module.exit_json(changed=True, object_name=module.params['display_name'], id=new_tz.id, message="Transport Zone with name %s has changed tags!"%(module.params['display_name']))
-            module.exit_json(changed=False, object_name=module.params['display_name'], id=tz.id, message="Transport Zone with name %s already exists!"%(module.params['display_name']))
+                new_ippool = ippool_svc.create(new_ippool)
+                module.exit_json(changed=True, object_name=module.params['display_name'], id=new_ippool.id, message="IP POOL with name %s created!"%(module.params['display_name']))
+        elif ippool:
+            if tags != ippool.tags:
+                ippool.tags=tags
+                new_ippool = ippool_svc.update(ippool.id, ippool)
+                module.exit_json(changed=True, object_name=module.params['display_name'], id=new_ippool.id, message="IP POOL with name %s has changed tags!"%(module.params['display_name']))
+            module.exit_json(changed=False, object_name=module.params['display_name'], id=ippool.id, message="IP POOL with name %s already exists!"%(module.params['display_name']))
 
     elif module.params['state'] == "absent":
-        transportzones_svc.delete(tz.id)
-        module.exit_json(changed=True, object_name=module.params['display_name'], message="Transport Zone with name %s deleted!"%(module.params['display_name']))
+        ippool_svc.delete(ippool.id)
+        module.exit_json(changed=True, object_name=module.params['display_name'], message="IP POOL with name %s deleted!"%(module.params['display_name']))
 
 
 from ansible.module_utils.basic import *

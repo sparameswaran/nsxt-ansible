@@ -230,13 +230,13 @@ def main():
         argument_spec=dict(
             display_name=dict(required=True, type='str'),
             node_id=dict(required=True, type='str'),
-            maintenance_mode=dict(required=False, type='str'),
+            maintenance_mode=dict(required=False, type='str', choices=['DISABLED', 'ENABLED', 'FORCE_ENABLED']),
             static_ip_pool_id=dict(required=True, type='str'),
             host_switch_name=dict(required=False, type='str'),
             transport_zone_endpoints=dict(required=False, type='list'),
             pnics=dict(required=False, type='dict'),
             uplink_profile=dict(required=False, type='str'),
-            state=dict(required=False, type='str', default="present"),
+            state=dict(required=False, type='str', default="present", choices=['present', 'absent']),
             nsx_manager=dict(required=True, type='str'),
             nsx_username=dict(required=True, type='str'),
             nsx_passwd=dict(required=True, type='str', no_log=True)

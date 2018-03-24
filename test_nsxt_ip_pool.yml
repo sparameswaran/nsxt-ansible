@@ -1,0 +1,40 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: NSX-T IP Pool
+      nsxt_ip_pool:
+        display_name: "test_pool"
+        description: "My Test IP Pool"
+        subnets:
+          - cidr: 192.168.10.0/24
+            allocation_ranges: 
+              - "192.168.10.10-192.168.10.100"
+              - "192.168.10.101-192.168.10.200"
+            dns_nameservers: 
+              - 10.29.12.201
+              - 20.19.12.200
+              - 8.8.8.8
+            dns_suffix: "yasen.local"
+            gateway_ip: 192.168.10.1
+          - cidr: 192.168.20.0/24
+            allocation_ranges: 
+              - "192.168.20.10-192.168.20.100"
+              - "192.168.20.101-192.168.20.200"
+            dns_nameservers: 
+              - 10.29.12.201
+              - 20.19.12.200
+              - 8.8.8.8
+            dns_suffix: "yasen.local"
+            gateway_ip: 192.168.20.1
+
+        tags:
+          project: demo
+          ncp/cluster: k8s-cluster1
+        state: present
+        nsx_manager: "10.29.12.209"
+        nsx_username: "admin"
+        nsx_passwd: 'VMware1!'
+      register: ippool
+  tags: ippool

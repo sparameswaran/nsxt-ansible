@@ -125,9 +125,9 @@ def main():
             node_username=dict(required=False, type='str'),
             node_passwd=dict(required=False, type='str', no_log=True),
             thumbprint=dict(required=False, type='str', no_log=True),
-            os_type=dict(required=True, type='str'),
-            os_version=dict(required=True, type='str'),
-            state=dict(required=False, type='str', default="present"),
+            os_type=dict(required=True, type='str', choices=['ESXI', 'RHEL', 'UBUNTU']),
+            os_version=dict(required=True, type='str', choices=['6.5.0', '7.4', '16.04']),
+            state=dict(required=False, type='str', default="present", choices=['present', 'absent']),
             nsx_manager=dict(required=True, type='str'),
             nsx_username=dict(required=True, type='str'),
             nsx_passwd=dict(required=True, type='str', no_log=True)
