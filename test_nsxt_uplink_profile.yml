@@ -1,0 +1,27 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: NSX-T Uplink Profile
+      nsxt_uplink_profile:
+        display_name: "test-uplink-profile"
+        description: "My Test Uplink Profile"
+        mtu: 1600
+        active_list:
+          - uplink-1
+          - uplink-2
+        standby_list:
+          - uplink-3
+          - uplink-4
+        policy: "FAILOVER_ORDER"
+        transport_vlan: 20
+        tags:
+          project: demo2
+          ncp/cluster: k8s-cluster1
+        state: present
+        nsx_manager: "10.29.12.209"
+        nsx_username: "admin"
+        nsx_passwd: 'VMware1!'
+      register: uplink_prof
+  tags: uplink_prof

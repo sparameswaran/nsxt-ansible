@@ -28,6 +28,11 @@ try:
     from com.vmware.nsx.pools_client import IpPools
     from com.vmware.nsx.model_client import Tag
 
+    from com.vmware.nsx_client import HostSwitchProfiles
+    from com.vmware.nsx.model_client import UplinkHostSwitchProfile
+    from com.vmware.nsx.model_client import TeamingPolicy
+    from com.vmware.nsx.model_client import Uplink
+
     from com.vmware.vapi.std.errors_client import NotFound
     from vmware.vapi.lib import connect
     from vmware.vapi.security.user_password import \
@@ -39,22 +44,22 @@ try:
 except ImportError:
     HAS_PYNSXT = False
 
-def listIpPools(module, stub_config):
-    ippool_list = []
+def listProfiles(module, stub_config):
+    prof_list = []
     try:
-        ippool_svc = IpPools(stub_config)
-        ippool_list = ippool_svc.list()
+        hs_profile_svc = HostSwitchProfiles(stub_config)
+        prof_list = hs_profile_svc.list()
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing IP POOLS: %s'%(api_error.error_message))
-    return ippool_list
+        module.fail_json(msg='API Error listing Hostswitch Profiles: %s'%(api_error.error_message))
+    return prof_list
 
-def getIpPoolByName(module, stub_config):
-    result = listIpPools(module, stub_config)
+def getProfileByName(module, stub_config):
+    result = listProfiles(module, stub_config)
     for vs in result.results:
-        ippool = vs.convert_to(IpPool)
-        if ippool.display_name == module.params['display_name']:
-            return ippool
+        prof = vs.convert_to(UplinkHostSwitchProfile)
+        if prof.display_name == module.params['display_name']:
+            return prof
     return None
 
 def main():
@@ -62,7 +67,12 @@ def main():
         argument_spec=dict(
             display_name=dict(required=True, type='str'),
             description=dict(required=False, type='str', default=None),
-            subnets=dict(required=True, type='list'),
+            mtu=dict(required=False, type='int', default=1600),
+            lags=dict(required=False, type='list', default=None),
+            active_list=dict(required=True, type='list'),
+            standby_list=dict(required=False, type='list', default=None),
+            policy=dict(required=True, type='str', choices=['FAILOVER_ORDER', 'LOADBALANCE_SRCID']),
+            transport_vlan=dict(required=True, type='int'),
             tags=dict(required=False, type='dict', default=None),
             state=dict(required=False, type='str', default="present", choices=['present', 'absent']),
             nsx_manager=dict(required=True, type='str'),
@@ -90,55 +100,60 @@ def main():
             tag=Tag(scope=key, tag=value)
             tags.append(tag)
 
+    uplink_type=Uplink.UPLINK_TYPE_PNIC
+    if module.params['lags']:
+        uplink_type=Uplink.UPLINK_TYPE_LAG
 
+    active_list = []
+    for active_uplink in module.params['active_list']:
+        uplink = Uplink(active_uplink, uplink_type)
+        active_list.append(uplink)
 
-    subnet_list = []
-    for subnet in module.params['subnets']:
-        ip_range_list = []
-        for iprange in subnet['allocation_ranges']:
-            ipr = iprange.split('-')
-            ip_pool_range = IpPoolRange(start=ipr[0], end=ipr[1])
-            ip_range_list.append(ip_pool_range)
+    standby_list = []
+    for standby_uplink in module.params['standby_list']:
+        uplink = Uplink(standby_uplink, uplink_type)
+        standby_list.append(uplink)
 
-        ip_pool_subnet = IpPoolSubnet(
-            allocation_ranges=ip_range_list,
-            cidr=subnet['cidr'],
-            dns_nameservers=subnet['dns_nameservers'],
-            dns_suffix=subnet['dns_suffix'],
-            gateway_ip=subnet['gateway_ip']
-        )
-        subnet_list.append(ip_pool_subnet)
+    teaming=TeamingPolicy(active_list, module.params['policy'], standby_list)
 
-    ippool_svc = IpPools(stub_config)
-    ippool = getIpPoolByName(module, stub_config)
+    hs_profile_svc = HostSwitchProfiles(stub_config)
+    prof = getProfileByName(module, stub_config)
     if module.params['state'] == 'present':
-        if ippool is None:
-            if module.params['state'] == "present":
-                new_ippool = IpPool(
-                    display_name=module.params['display_name'],
-                    description=module.params['description'],
-                    subnets=subnet_list,
-                    tags=tags
-                )
-                new_ippool = ippool_svc.create(new_ippool)
-                module.exit_json(changed=True, object_name=module.params['display_name'], id=new_ippool.id, message="IP POOL with name %s created!"%(module.params['display_name']))
-        elif ippool:
+        if prof is None:
+            new_prof = UplinkHostSwitchProfile(
+                display_name=module.params['display_name'],
+                description=module.params['description'],
+                lags=module.params['lags'],
+                mtu=module.params['mtu'],
+                teaming=teaming,
+                transport_vlan=module.params['transport_vlan'],
+                tags=tags
+            )
+            new_prof = hs_profile_svc.create(new_prof)
+            created_prof = getProfileByName(module, stub_config)
+            module.exit_json(changed=True, object_name=module.params['display_name'], id=created_prof.id, message="Uplink Profile with name %s created!"%(module.params['display_name']))
+        elif prof:
             changed = False
-            if tags != ippool.tags:
+            if tags != prof.tags:
                 changed = True
-                ippool.tags=tags
-            if ippool.subnets != subnet_list:
-                ippool.subnets = subnet_list
+                prof.tags=tags
+            if prof.teaming != teaming:
+                prof.teaming = teaming
+                changed = True
+            if prof.mtu != module.params['mtu']:
+                prof.mtu = module.params['mtu']
+                changed = True
+            if prof.transport_vlan != module.params['transport_vlan']:
+                prof.transport_vlan = module.params['transport_vlan']
                 changed = True
             if changed:
-                new_ippool = ippool_svc.update(ippool.id, ippool)
-                module.exit_json(changed=True, object_name=module.params['display_name'], id=ippool.id, msg="IP Pool has been changed")
-            module.exit_json(changed=False, object_name=module.params['display_name'], id=ippool.id, message="IP POOL with name %s already exists!"%(module.params['display_name']))
+                new_prof = hs_profile_svc.update(prof.id, prof)
+                module.exit_json(changed=True, object_name=module.params['display_name'], id=prof.id, msg="Uplink Profile has been changed")
+            module.exit_json(changed=False, object_name=module.params['display_name'], id=prof.id, message="Uplink Profile with name %s already exists!"%(module.params['display_name']))
 
     elif module.params['state'] == "absent":
-        ippool_svc.delete(ippool.id)
-        module.exit_json(changed=True, object_name=module.params['display_name'], message="IP POOL with name %s deleted!"%(module.params['display_name']))
-
+        hs_profile_svc.delete(prof.id)
+        module.exit_json(changed=True, object_name=module.params['display_name'], message="Uplink Profile with name %s deleted!"%(module.params['display_name']))
 
 from ansible.module_utils.basic import *
 
