@@ -1,9 +1,6 @@
 [localhost]
 localhost       ansible_connection=local
 
-[jumphost]
-10.29.12.220 		ansible_ssh_host=10.29.12.220		ansible_ssh_user=root ansible_ssh_pass=VMware1!
-
 [nsxmanagers]
 nsx-manager 		ansible_ssh_host=10.29.12.209		ansible_ssh_user=root ansible_ssh_pass=VMware1!
 
@@ -19,5 +16,50 @@ nsx-edge1		ansible_ssh_host=10.29.12.199		ansible_ssh_user=root ansible_ssh_pass
 [nsxtransportnodes]
 esx3		ansible_ssh_host=10.29.12.207		ansible_ssh_user=root ansible_ssh_pass=VMware1!
 esx4		ansible_ssh_host=10.29.12.208		ansible_ssh_user=root ansible_ssh_pass=VMware1!
+
+[localhost:vars]
+
+edge_node_uuid="5304b0d6-2f6c-11e8-a634-005056a042bf"
+
+tag_scope="ncp/cluster"
+tag="k8s-cluster1"
+overlay_tz_name="overlay-tz"
+vlan_tz_name="vlan-tz"
+hostswitch="hs1"
+
+tep_pool_name="tep-pool"
+tep_pool_cidr="192.168.20.0/24"
+tep_pool_range="192.168.20.10-192.168.20.100"
+tep_pool_nameserver="10.29.12.201"
+tep_pool_suffix="yasen.local"
+tep_pool_gw="192.168.20.1"
+
+edge_uplink_profile_name="edge-uplink-profile"
+edge_uplink_profile_mtu=1600
+edge_uplink_profile_vlan=20
+edge_interface="fp-eth2"
+
+esxi_uplink_profile_name="esxi-uplink-profile"
+esxi_uplink_profile_mtu=1600
+esxi_uplink_profile_vlan=20
+
+edge_cluster="EdgeCluster1"
+
+t0_name="DefaultT0Router"
+t0_ha_mode="ACTIVE_STANDBY"
+
+t1_name="MngmtT1Router"
+t1_ip=["192.168.10.1"]
+t1_mask=24
+
+vlan_ls_mgmt="307"
+vlan_ls_vmotion="1078"
+vlan_ls_vsan="1079"
+
+ls_name="MngmtLS"
+
+
+
+
 
 

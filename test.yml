@@ -1,0 +1,44 @@
+---
+- name: Check local dependencies
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: Remove previous SSH keys from known_hosts - NSX nodes
+      command: ssh-keygen -R "{{ hostvars[item]['ansible_ssh_host'] }}"
+      register: command_result
+      failed_when: "command_result.rc > 0 and command_result.rc != 255"
+      with_items: "{{ groups['nsxtransportnodes'] }}"
+    - name: add host to known_hosts - Managers
+      shell: mkdir -p ~/.ssh; ssh-keyscan -H "{{ hostvars[item]['ansible_ssh_host'] }}" >> ~/.ssh/known_hosts
+      with_items: "{{ groups['nsxtransportnodes'] }}"
+  tags: clean_old_keys
+- name: Get ESX nodes information
+  hosts: nsxtransportnodes
+  gather_facts: True
+  tasks:
+    - name: Get SHA-256 SSL thumbprint
+      command: openssl x509 -in /etc/vmware/ssl/rui.crt -fingerprint -sha256 -noout
+      when:
+        - ansible_distribution == "VMkernel"
+      register: thumb
+    - name: Set ssl thumbprint fact
+      set_fact:
+        sslthumb: "{{ thumb.stdout|regex_findall('Fingerprint=(.*)') }}"
+      when:
+        - ansible_distribution == "VMkernel"
+    - debug: var=ansible_kernel
+    - debug: var=thumb
+
+- name: print facts locally
+  hosts: localhost
+  connection: local
+  gather_facts: True
+  tasks:
+    - debug: var=hostvars[item].sslthumb
+      with_items: "{{ groups['nsxtransportnodes'] }}"
+    - debug: var=hostvars['localhost'].myVar
+
+
+
+

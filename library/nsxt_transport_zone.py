@@ -21,10 +21,11 @@ __author__ = 'yasensim'
 
 
 import requests, time
+
 try:
-    from com.vmware.nsx_client import TransportZones
     from com.vmware.nsx.model_client import TransportZone
     from com.vmware.nsx.model_client import Tag
+    from com.vmware.nsx_client import TransportZones
 
     from com.vmware.vapi.std.errors_client import NotFound
     from vmware.vapi.lib import connect
