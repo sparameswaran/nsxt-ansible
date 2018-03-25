@@ -23,11 +23,8 @@ __author__ = 'yasensim'
 import requests, time
 try:
     from com.vmware.nsx.model_client import Tag
-    from com.vmware.nsx_client import LogicalSwitches
-    from com.vmware.nsx.model_client import LogicalSwitch
-from com.vmware.nsx_client import LogicalPorts
-from com.vmware.nsx.model_client import LogicalPort
-
+    from com.vmware.nsx_client import LogicalPorts
+    from com.vmware.nsx.model_client import LogicalPort
 
     from com.vmware.vapi.std.errors_client import NotFound
     from vmware.vapi.lib import connect
@@ -40,22 +37,22 @@ from com.vmware.nsx.model_client import LogicalPort
 except ImportError:
     HAS_PYNSXT = False
 
-def listLogicalSwitches(module, stub_config):
-    ls_list = []
+def listLogicalSwitchPorts(module, stub_config):
+    lsp_list = []
     try:
-        ls_svc = LogicalSwitches(stub_config)
-        ls_list = ls_svc.list()
+        lsp_svc = LogicalPorts(stub_config)
+        lsp_list = lsp_svc.list()
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Logical Switches: %s'%(api_error.error_message))
-    return ls_list
+        module.fail_json(msg='API Error listing Logical Switch Ports: %s'%(api_error.error_message))
+    return lsp_list
 
-def getLogicalSwitchByName(module, stub_config):
-    result = listLogicalSwitches(module, stub_config)
+def getLogicalSwitchPortByName(module, stub_config):
+    result = listLogicalSwitchPorts(module, stub_config)
     for vs in result.results:
-        ls = vs.convert_to(LogicalSwitch)
-        if ls.display_name == module.params['display_name']:
-            return ls
+        lsp = vs.convert_to(LogicalPort)
+        if lsp.display_name == module.params['display_name']:
+            return lsp
     return None
 
 def main():
@@ -64,12 +61,8 @@ def main():
             display_name=dict(required=True, type='str'),
             description=dict(required=False, type='str', default=None),
             admin_state=dict(required=False, type='str', default='UP', choices=['UP', 'DOWN']),
-            ip_pool_id=dict(required=False, type='str', default=None),
-            mac_pool_id=dict(required=False, type='str', default=None),
-            replication_mode=dict(required=False, type='str', default='MTEP', choices=['MTEP', 'SOURCE']),
+            logical_switch_id=dict(required=True, type='str'),
             switching_profile_ids=dict(required=False, type='list', default=None),
-            transport_zone_id=dict(required=True, type='str'),
-            vlan=dict(required=False, type='int', default=None),
             tags=dict(required=False, type='dict', default=None),
             state=dict(required=False, type='str', default="present", choices=['present', 'absent']),
             nsx_manager=dict(required=True, type='str'),
@@ -96,40 +89,37 @@ def main():
         for key, value in module.params['tags'].items():
             tag=Tag(scope=key, tag=value)
             tags.append(tag)
-    ls_svc = LogicalSwitches(stub_config)
-    ls = getLogicalSwitchByName(module, stub_config)
+    lsp_svc = LogicalPorts(stub_config)
+    lsp = getLogicalSwitchPortByName(module, stub_config)
     if module.params['state'] == 'present':
-        if ls is None:
-            new_ls = LogicalSwitch(
+        if lsp is None:
+            new_lsp = LogicalPort(
                 display_name=module.params['display_name'],
                 description=module.params['description'],
                 address_bindings=None,
                 admin_state=module.params['admin_state'],
-                ip_pool_id=module.params['ip_pool_id'],
-                mac_pool_id=module.params['mac_pool_id'],
-                replication_mode=module.params['replication_mode'],
+                attachment=None,
+                logical_switch_id=module.params['logical_switch_id'],
                 switching_profile_ids=None,
-                transport_zone_id=module.params['transport_zone_id'],
-                vlan=module.params['vlan'],
                 tags=tags
             )
-            new_ls = ls_svc.create(new_ls)
-            module.exit_json(changed=True, object_name=module.params['display_name'], id=new_ls.id, message="Logical Switch with name %s created!"%(module.params['display_name']))
-        elif ls:
+            new_lsp = lsp_svc.create(new_lsp)
+            module.exit_json(changed=True, object_name=module.params['display_name'], id=new_lsp.id, message="Logical Switch Port with name %s created!"%(module.params['display_name']))
+        elif lsp:
             changed = False
-            if tags != ls.tags:
+            if tags != lsp.tags:
                 changed = True
-                ls.tags=tags
-                new_ls = ls_svc.update(ls.id, ls)
+                lsp.tags=tags
+                new_lsp = lsp_svc.update(lsp.id, lsp)
             if changed:
-                module.exit_json(changed=True, object_name=module.params['display_name'], id=new_ls.id, message="Logical Switch with name %s has changed tags!"%(module.params['display_name']))
-            module.exit_json(changed=False, object_name=module.params['display_name'], id=ls.id, message="Logical Switch with name %s already exists!"%(module.params['display_name']))
+                module.exit_json(changed=True, object_name=module.params['display_name'], id=new_lsp.id, message="Logical Switch Port with name %s has changed tags!"%(module.params['display_name']))
+            module.exit_json(changed=False, object_name=module.params['display_name'], id=lsp.id, message="Logical Switch Port with name %s already exists!"%(module.params['display_name']))
 
     elif module.params['state'] == "absent":
-        if ls:
-            ls_svc.delete(ls.id)
-            module.exit_json(changed=True, object_name=module.params['display_name'], message="Logical Switch with name %s deleted!"%(module.params['display_name']))
-        module.exit_json(changed=False, object_name=module.params['display_name'], message="Logical Switch with name %s does not exist!"%(module.params['display_name']))
+        if lsp:
+            lsp_svc.delete(lsp.id)
+            module.exit_json(changed=True, object_name=module.params['display_name'], message="Logical Switch Port with name %s deleted!"%(module.params['display_name']))
+        module.exit_json(changed=False, object_name=module.params['display_name'], message="Logical Switch Port with name %s does not exist!"%(module.params['display_name']))
 
 from ansible.module_utils.basic import *
 

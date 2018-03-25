@@ -111,6 +111,9 @@ def main():
                 tags=tags
             )
             new_ls = ls_svc.create(new_ls)
+#
+#  TODO: Check the realisation before exiting !!!!
+#
             module.exit_json(changed=True, object_name=module.params['display_name'], id=new_ls.id, message="Logical Switch with name %s created!"%(module.params['display_name']))
         elif ls:
             changed = False

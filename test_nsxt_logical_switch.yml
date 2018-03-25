@@ -11,7 +11,7 @@
         tags:
           project: demo2
           ncp/cluster: k8s-cluster1
-        state: absent
+        state: present
         nsx_manager: "10.29.12.209"
         nsx_username: "admin"
         nsx_passwd: 'VMware1!'
