@@ -14,7 +14,7 @@ edge1		ansible_ssh_host=10.29.12.199		ansible_ssh_user=root ansible_ssh_pass=VMw
 #nsx-edge2		ansible_ssh_host=10.29.12.215		ansible_ssh_user=root ansible_ssh_pass=VMware1!
 
 [nsxtransportnodes]
-ESX1		ansible_ssh_host=10.29.12.207		ansible_ssh_user=root ansible_ssh_pass=VMware1!
+esx1		ansible_ssh_host=10.29.12.207		ansible_ssh_user=root ansible_ssh_pass=VMware1!
 esx4		ansible_ssh_host=10.29.12.208		ansible_ssh_user=root ansible_ssh_pass=VMware1!
 
 [localhost:vars]

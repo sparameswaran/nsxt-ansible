@@ -1,0 +1,176 @@
+---
+- name: Delete old SSH Keys
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  vars_files:
+    - ../answerfile.yml
+  tasks:
+    - name: Remove previous SSH keys from known_hosts - Managers
+      command: 'ssh-keygen -R "{{ item.value.ipAddress }}"'
+      register: command_result
+      failed_when: "command_result.rc > 0 and command_result.rc != 255"
+      with_dict: "{{ managers }}"
+    - name: Remove previous SSH keys from known_hosts - Controllers
+      command: 'ssh-keygen -R "{{ item.value.ipAddress }}"'
+      register: command_result
+      failed_when: "command_result.rc > 0 and command_result.rc != 255"
+      with_dict: "{{ controllers }}"
+    - name: Remove previous SSH keys from known_hosts - Edges
+      command: 'ssh-keygen -R "{{ item.value.ipAddress }}"'
+      register: command_result
+      failed_when: "command_result.rc > 0 and command_result.rc != 255"
+      with_dict: "{{ edges }}"
+  tags: clean_old_keys
+- name: Wait for all VMs to be reachable
+  hosts:
+    - nsxmanagers
+    - nsxcontrollers
+    - nsxedges
+  gather_facts: False
+  tasks:
+    - name: Wait for all VMs
+      local_action: wait_for port=22 host={{ ansible_ssh_host }}
+  tags: wait_for_vms
+- name: Populate known_hosts
+  hosts: localhost
+  connection: local
+  gather_facts: False
+  vars_files:
+    - ../answerfile.yml
+  tasks:
+    - name: add host to known_hosts - Managers
+      shell: 'mkdir -p ~/.ssh; ssh-keyscan -H "{{ item.value.ipAddress }}" >> ~/.ssh/known_hosts'
+      with_dict: "{{ managers }}"
+    - name: add host to known_hosts - Controllers
+      shell: 'mkdir -p ~/.ssh; ssh-keyscan -H "{{ item.value.ipAddress }}" >> ~/.ssh/known_hosts'
+      with_dict: "{{ controllers }}"
+    - name: add host to known_hosts - Edges
+      shell: 'mkdir -p ~/.ssh; ssh-keyscan -H "{{ item.value.ipAddress }}" >> ~/.ssh/known_hosts'
+      with_dict: "{{ edges }}"
+  tags: populate_known_hosts
+- name: Retrieve NSX Man thumbprint
+  serial: 1
+  hosts: nsx-manager
+  gather_facts: False
+  vars_files:
+    - ../answerfile.yml
+  tasks:
+    - name: Retrieve thumbprint
+      command: >
+        /opt/vmware/nsx-cli/bin/scripts/nsxcli 
+        -c get certificate api thumbprint
+      register: thumbprint
+    - name: Wait 5 minutes before start adding Edges and Controllers
+      pause: minutes=5
+  tags: nsxman_thumb
+
+- name: Join controllers and gateways to NSX-Manager
+  hosts: nsxcontrollers:nsxedges
+  gather_facts: False
+  vars_files:
+    - ../answerfile.yml
+  tasks:
+    - name: Join controllers and gateways to Manager
+      command: >
+        /opt/vmware/nsx-cli/bin/scripts/nsxcli 
+        -c join management-plane "{{ managers.nsxmanager.ipAddress }}"
+        username admin
+        thumbprint "{{ hostvars['nsx-manager']['thumbprint']['stdout'] }}"
+        password "{{ nsxAdminPass }}"
+      ignore_errors: yes
+  tags: nsxmanager_join
+
+- name: Prepare first Controller
+  hosts: nsx-controller01
+  gather_facts: False
+  vars_files:
+    - ../answerfile.yml
+  tasks:
+    - name: Set security-model on first controller
+      command: >
+        /opt/vmware/nsx-cli/bin/scripts/nsxcli -c 
+        set control-cluster security-model shared-secret secret "{{ controllerClusterPass }}"
+    - name: Wait 1 minute before initialize the control-cluster
+      pause: minutes=1
+    - name: Initialize the controller cluster 
+      command: >
+        /opt/vmware/nsx-cli/bin/scripts/nsxcli -c initialize control-cluster
+      register: initialize
+    - name: Wait 3 more minutes and try again as it seems the controller is not ready
+      pause: minutes=3
+      when: "'initialization timed out' in initialize.stdout"
+    - name: Retry when first try didn't work
+      command: >
+        /opt/vmware/nsx-cli/bin/scripts/nsxcli -c initialize control-cluster
+      when: "'initialization timed out' in initialize.stdout"
+  tags: first_controller
+
+- name: Get second and third controllers thumbprint
+  hosts: 
+    - nsx-controller02
+    - nsx-controller03
+  serial: 1
+  gather_facts: False
+  vars_files:
+    - ../answerfile.yml
+  tasks:
+    - name: Set security-model on controllers
+      command: >
+        /opt/vmware/nsx-cli/bin/scripts/nsxcli -c 
+        set control-cluster security-model shared-secret secret "{{ controllerClusterPass }}"
+    - name: Retrieve thumbprint
+      command: >
+        /opt/vmware/nsx-cli/bin/scripts/nsxcli 
+        -c get control-cluster certificate thumbprint
+      register: thumbprint
+  tags: secondary_controller_prep
+
+- name: Join the second and third controller on the master
+  hosts: nsx-controller01
+  gather_facts: False
+  vars_files:
+    - ../answerfile.yml
+  tasks:
+    - name: Join second controller to master controller
+      command: >
+        /opt/vmware/nsx-cli/bin/scripts/nsxcli -c 
+        join control-cluster "{{ controllers.nsxController02.ipAddress }}" 
+        thumbprint "{{ hostvars['nsx-controller02']['thumbprint']['stdout'] }}"
+    - name: Join third controllers to master controller
+      command: >
+        /opt/vmware/nsx-cli/bin/scripts/nsxcli -c 
+        join control-cluster "{{ controllers.nsxController03.ipAddress }}" 
+        thumbprint "{{ hostvars['nsx-controller03']['thumbprint']['stdout'] }}"
+  tags: nsxcontroller_join
+
+- name: Activate Controllers
+  hosts: nsxcontrollers
+  serial: 1
+  gather_facts: False
+  vars_files:
+    - ../answerfile.yml
+  tasks:
+    - name: Activate Controllers
+      command: >
+        /opt/vmware/nsx-cli/bin/scripts/nsxcli -c 
+        activate control-cluster
+      register: activate
+    - name: Wait for 30 seconds and try again
+      pause: seconds=30
+      when: "'activation timed out' in activate.stdout"
+    - name: Retry when first try didn't work
+      command: >
+        /opt/vmware/nsx-cli/bin/scripts/nsxcli -c 
+        activate control-cluster
+      when: "'activation timed out' in activate.stdout"
+  tags: nsxcontroller_activate
+
+- name: Activate Controllers
+  hosts: localhost
+  gather_facts: False
+  vars_files:
+    - ../answerfile.yml
+  tasks:
+    - name: Wait for 1 minute before starting with the initial configuration
+      pause: seconds=60

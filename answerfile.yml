@@ -41,7 +41,7 @@ controllers:
     ovaFile: 'nsx-controller-2.1.0.0.0.7328367.ova'
 edges:
   nsxEdge1:
-    hostname: 'edge1.yasen.local'
+    hostname: 'edge1'
     vmName: 'A-NSX Edge 01'
     ipAddress: '10.29.12.199' 
     ovaFile: 'nsx-edge-2.1.0.0.0.7328372.ova'
