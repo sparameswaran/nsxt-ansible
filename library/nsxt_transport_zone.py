@@ -94,18 +94,17 @@ def main():
     tz = getTransportZoneByName(module, stub_config)
     if module.params['state'] == 'present':
         if tz is None:
-            if module.params['state'] == "present":
-                new_tz = TransportZone(
-                    transport_type=module.params['transport_type'],
-                    display_name=module.params['display_name'],
-                    description=module.params['description'],
-                    host_switch_name=module.params['host_switch_name'],
-                    host_switch_mode=module.params['host_switch_mode'],
-                    nested_nsx=module.params['nested_nsx'],
-                    tags=tags
-                )
-                new_tz = transportzones_svc.create(new_tz)
-                module.exit_json(changed=True, object_name=module.params['display_name'], id=new_tz.id, message="Transport Zone with name %s created!"%(module.params['display_name']))
+            new_tz = TransportZone(
+                transport_type=module.params['transport_type'],
+                display_name=module.params['display_name'],
+                description=module.params['description'],
+                host_switch_name=module.params['host_switch_name'],
+                host_switch_mode=module.params['host_switch_mode'],
+                nested_nsx=module.params['nested_nsx'],
+                tags=tags
+            )
+            new_tz = transportzones_svc.create(new_tz)
+            module.exit_json(changed=True, object_name=module.params['display_name'], id=new_tz.id, message="Transport Zone with name %s created!"%(module.params['display_name']))
         elif tz:
             if tags != tz.tags:
                 tz.tags=tags
