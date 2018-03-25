@@ -16,5 +16,5 @@
         nsx_manager: "10.29.12.209"
         nsx_username: "admin"
         nsx_passwd: 'VMware1!'
-      register: t0
-  tags: t0
+      register: t1
+  tags: t1

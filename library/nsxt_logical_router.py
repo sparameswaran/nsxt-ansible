@@ -116,9 +116,10 @@ def main():
             module.exit_json(changed=False, object_name=module.params['display_name'], id=lr.id, message="Logical Router with name %s already exists!"%(module.params['display_name']))
 
     elif module.params['state'] == "absent":
-        lr_svc.delete(lr.id)
-        module.exit_json(changed=True, object_name=module.params['display_name'], message="Logical Router with name %s deleted!"%(module.params['display_name']))
-
+        if lr:
+            lr_svc.delete(lr.id)
+            module.exit_json(changed=True, object_name=module.params['display_name'], message="Logical Router with name %s deleted!"%(module.params['display_name']))
+        module.exit_json(changed=False, object_name=module.params['display_name'], message="Logical Router with name %s does not exist!"%(module.params['display_name']))
 
 from ansible.module_utils.basic import *
 

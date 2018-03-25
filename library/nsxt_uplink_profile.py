@@ -190,8 +190,10 @@ def main():
             module.exit_json(changed=False, object_name=module.params['display_name'], id=prof.id, message="Uplink Profile with name %s already exists!"%(module.params['display_name']))
 
     elif module.params['state'] == "absent":
-        hs_profile_svc.delete(prof.id)
-        module.exit_json(changed=True, object_name=module.params['display_name'], message="Uplink Profile with name %s deleted!"%(module.params['display_name']))
+        if prof:
+            hs_profile_svc.delete(prof.id)
+            module.exit_json(changed=True, object_name=module.params['display_name'], message="Uplink Profile with name %s deleted!"%(module.params['display_name']))
+        module.exit_json(changed=False, object_name=module.params['display_name'], message="Uplink Profile with name %s does not exist!"%(module.params['display_name']))
 
 from ansible.module_utils.basic import *
 

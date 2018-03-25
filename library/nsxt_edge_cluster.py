@@ -154,9 +154,10 @@ def main():
             module.exit_json(changed=False, object_name=module.params['display_name'], id=ec.id, message="Edge Cluster with name %s already exists!"%(module.params['display_name']))
 
     elif module.params['state'] == "absent":
-        ec_svc.delete(ec.id)
-        module.exit_json(changed=True, object_name=module.params['display_name'], message="Edge Cluster with name %s deleted!"%(module.params['display_name']))
-
+        if ec:
+            ec_svc.delete(ec.id)
+            module.exit_json(changed=True, object_name=module.params['display_name'], message="Edge Cluster with name %s deleted!"%(module.params['display_name']))
+        module.exit_json(changed=False, object_name=module.params['display_name'], message="Edge Cluster with name %s does not exist!"%(module.params['display_name']))
 
 from ansible.module_utils.basic import *
 

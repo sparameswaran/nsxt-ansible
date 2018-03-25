@@ -278,6 +278,7 @@ def main():
             module.exit_json(changed=False, object_name=module.params['display_name'], message="No Transport Node with name %s"%(module.params['display_name']))
         else:
             deleteTransportNode(module, node, stub_config)
+            module.exit_json(changed=True, object_name=module.params['display_name'], message="Transport Node with name %s deleted"%(module.params['display_name']))
 
 
 

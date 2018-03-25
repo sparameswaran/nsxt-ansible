@@ -22,9 +22,9 @@ __author__ = 'yasensim'
 
 import requests, time
 try:
-    from com.vmware.nsx_client import TransportZones
-    from com.vmware.nsx.model_client import TransportZone
     from com.vmware.nsx.model_client import Tag
+    from com.vmware.nsx_client import LogicalSwitches
+    from com.vmware.nsx.model_client import LogicalSwitch
 
     from com.vmware.vapi.std.errors_client import NotFound
     from vmware.vapi.lib import connect
@@ -37,22 +37,22 @@ try:
 except ImportError:
     HAS_PYNSXT = False
 
-def listTransportZones(module, stub_config):
-    tz_list = []
+def listLogicalSwitches(module, stub_config):
+    ls_list = []
     try:
-        tz_svc = TransportZones(stub_config)
-        tz_list = tz_svc.list()
+        ls_svc = LogicalSwitches(stub_config)
+        ls_list = ls_svc.list()
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Transport Zones: %s'%(api_error.error_message))
-    return tz_list
+        module.fail_json(msg='API Error listing Logical Switches: %s'%(api_error.error_message))
+    return ls_list
 
-def getTransportZoneByName(module, stub_config):
-    result = listTransportZones(module, stub_config)
+def getLogicalSwitchByName(module, stub_config):
+    result = listLogicalSwitches(module, stub_config)
     for vs in result.results:
-        tz = vs.convert_to(TransportZone)
-        if tz.display_name == module.params['display_name']:
-            return tz
+        ls = vs.convert_to(LogicalSwitch)
+        if ls.display_name == module.params['display_name']:
+            return ls
     return None
 
 def main():
@@ -60,10 +60,13 @@ def main():
         argument_spec=dict(
             display_name=dict(required=True, type='str'),
             description=dict(required=False, type='str', default=None),
-            host_switch_mode=dict(required=False, type='str', default='STANDARD', choices=['STANDARD', 'ENS']),
-            host_switch_name=dict(required=True, type='str'),
-            nested_nsx=dict(required=False, type='bool', default=False),
-            transport_type=dict(required=False, type='str', default='OVERLAY', choices=['OVERLAY', 'VLAN']),
+            admin_state=dict(required=False, type='str', default='UP', choices=['UP', 'DOWN']),
+            ip_pool_id=dict(required=False, type='str', default=None),
+            mac_pool_id=dict(required=False, type='str', default=None),
+            replication_mode=dict(required=False, type='str', default='MTEP', choices=['MTEP', 'SOURCE']),
+            switching_profile_ids=dict(required=False, type='list', default=None),
+            transport_zone_id=dict(required=True, type='str'),
+            vlan=dict(required=False, type='int', default=None),
             tags=dict(required=False, type='dict', default=None),
             state=dict(required=False, type='str', default="present", choices=['present', 'absent']),
             nsx_manager=dict(required=True, type='str'),
@@ -90,34 +93,40 @@ def main():
         for key, value in module.params['tags'].items():
             tag=Tag(scope=key, tag=value)
             tags.append(tag)
-    transportzones_svc = TransportZones(stub_config)
-    tz = getTransportZoneByName(module, stub_config)
+    ls_svc = LogicalSwitches(stub_config)
+    ls = getLogicalSwitchByName(module, stub_config)
     if module.params['state'] == 'present':
-        if tz is None:
-            if module.params['state'] == "present":
-                new_tz = TransportZone(
-                    transport_type=module.params['transport_type'],
-                    display_name=module.params['display_name'],
-                    description=module.params['description'],
-                    host_switch_name=module.params['host_switch_name'],
-                    host_switch_mode=module.params['host_switch_mode'],
-                    nested_nsx=module.params['nested_nsx'],
-                    tags=tags
-                )
-                new_tz = transportzones_svc.create(new_tz)
-                module.exit_json(changed=True, object_name=module.params['display_name'], id=new_tz.id, message="Transport Zone with name %s created!"%(module.params['display_name']))
-        elif tz:
-            if tags != tz.tags:
-                tz.tags=tags
-                new_tz = transportzones_svc.update(tz.id, tz)
-                module.exit_json(changed=True, object_name=module.params['display_name'], id=new_tz.id, message="Transport Zone with name %s has changed tags!"%(module.params['display_name']))
-            module.exit_json(changed=False, object_name=module.params['display_name'], id=tz.id, message="Transport Zone with name %s already exists!"%(module.params['display_name']))
+        if ls is None:
+            new_ls = LogicalSwitch(
+                display_name=module.params['display_name'],
+                description=module.params['description'],
+                address_bindings=None,
+                admin_state=module.params['admin_state'],
+                ip_pool_id=module.params['ip_pool_id'],
+                mac_pool_id=module.params['mac_pool_id'],
+                replication_mode=module.params['replication_mode'],
+                switching_profile_ids=None,
+                transport_zone_id=module.params['transport_zone_id'],
+                vlan=module.params['vlan'],
+                tags=tags
+            )
+            new_ls = ls_svc.create(new_ls)
+            module.exit_json(changed=True, object_name=module.params['display_name'], id=new_ls.id, message="Logical Switch with name %s created!"%(module.params['display_name']))
+        elif ls:
+            changed = False
+            if tags != ls.tags:
+                changed = True
+                ls.tags=tags
+                new_ls = ls_svc.update(ls.id, ls)
+            if changed:
+                module.exit_json(changed=True, object_name=module.params['display_name'], id=new_ls.id, message="Logical Switch with name %s has changed tags!"%(module.params['display_name']))
+            module.exit_json(changed=False, object_name=module.params['display_name'], id=ls.id, message="Logical Switch with name %s already exists!"%(module.params['display_name']))
 
     elif module.params['state'] == "absent":
-        if tz:
-            transportzones_svc.delete(tz.id)
-            module.exit_json(changed=True, object_name=module.params['display_name'], message="Transport Zone with name %s deleted!"%(module.params['display_name']))
-        module.exit_json(changed=False, object_name=module.params['display_name'], message="Transport Zone with name %s doe not exist!"%(module.params['display_name']))
+        if ls:
+            ls_svc.delete(ls.id)
+            module.exit_json(changed=True, object_name=module.params['display_name'], message="Logical Switch with name %s deleted!"%(module.params['display_name']))
+        module.exit_json(changed=False, object_name=module.params['display_name'], message="Logical Switch with name %s does not exist!"%(module.params['display_name']))
 
 from ansible.module_utils.basic import *
 

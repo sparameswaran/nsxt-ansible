@@ -1,0 +1,20 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: NSX-T VLAN Logical Switch
+      nsxt_logical_switch:
+        display_name: "vlanTestLS"
+        description: "My VLAN Test Logical Switch"
+        transport_zone_id: "85ad593a-b1ec-47fc-b113-9a2ea2d2f260"
+        vlan: 1322
+        tags:
+          project: demo2
+          ncp/cluster: k8s-cluster1
+        state: present
+        nsx_manager: "10.29.12.209"
+        nsx_username: "admin"
+        nsx_passwd: 'VMware1!'
+      register: vls
+  tags: vls

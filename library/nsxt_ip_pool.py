@@ -136,9 +136,10 @@ def main():
             module.exit_json(changed=False, object_name=module.params['display_name'], id=ippool.id, message="IP POOL with name %s already exists!"%(module.params['display_name']))
 
     elif module.params['state'] == "absent":
-        ippool_svc.delete(ippool.id)
-        module.exit_json(changed=True, object_name=module.params['display_name'], message="IP POOL with name %s deleted!"%(module.params['display_name']))
-
+        if ippool:
+            ippool_svc.delete(ippool.id)
+            module.exit_json(changed=True, object_name=module.params['display_name'], message="IP POOL with name %s deleted!"%(module.params['display_name']))
+        module.exit_json(changed=False, object_name=module.params['display_name'], message="IP POOL with name %s does not exist!"%(module.params['display_name']))
 
 from ansible.module_utils.basic import *
 
