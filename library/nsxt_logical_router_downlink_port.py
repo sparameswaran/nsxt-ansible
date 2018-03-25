@@ -95,7 +95,7 @@ def main():
             tags.append(tag)
     subnet_list = []
     for subnet in module.params['subnets']:
-        new_subnet = IPSubnet(ip_addresses=subnet['ip_addresses'], prefix_length=subnet['prefix_length'])
+        new_subnet = IPSubnet(ip_addresses=subnet['ip_addresses'], prefix_length=int(subnet['prefix_length']))
         subnet_list.append(new_subnet)
 
     lrp_svc = LogicalRouterPorts(stub_config)

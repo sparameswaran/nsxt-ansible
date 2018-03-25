@@ -35,6 +35,10 @@ try:
     from com.vmware.nsx.model_client import UplinkHostSwitchProfile
     from com.vmware.nsx.model_client import Pnic
 
+    from com.vmware.nsx.fabric_client import Nodes
+    from com.vmware.nsx.model_client import Node
+    from com.vmware.nsx.model_client import HostNode
+
     from com.vmware.vapi.std.errors_client import NotFound
     from vmware.vapi.lib import connect
     from vmware.vapi.security.user_password import \
@@ -45,6 +49,23 @@ try:
     HAS_PYNSXT = True
 except ImportError:
     HAS_PYNSXT = False
+
+def listNodes(module, stub_config):
+    try:
+        fabricnodes_svc = Nodes(stub_config)
+    except Error as ex:
+        api_error = ex.data.convert_to(ApiError)
+        module.fail_json(msg='API Error listing nodes: %s'%(api_error.error_message))
+    return fabricnodes_svc.list()
+
+def getNodeByName(module, stub_config):
+    result = listNodes(module, stub_config)
+    for vs in result.results:
+        fn = vs.convert_to(Node)
+        if fn.display_name == module.params['node_name']:
+            return fn
+    return None
+
 
 
 def getTransportZoneEndPoint(module, stub_config):
@@ -228,7 +249,8 @@ def main():
     module = AnsibleModule(
         argument_spec=dict(
             display_name=dict(required=True, type='str'),
-            node_id=dict(required=True, type='str'),
+            node_id=dict(required=False, type='str', default=None),
+            node_name=dict(required=False, type='str'),
             maintenance_mode=dict(required=False, type='str', choices=['DISABLED', 'ENABLED', 'FORCE_ENABLED']),
             static_ip_pool_id=dict(required=True, type='str'),
             host_switch_name=dict(required=False, type='str'),
@@ -255,6 +277,9 @@ def main():
     connector.set_security_context(security_context)
     requests.packages.urllib3.disable_warnings()
 
+    if module.params['node_id'] is None:
+        fab_node = getNodeByName(module, stub_config)
+        module.params['node_id']=fab_node.id
     if module.params['state'] == "present":
         node = getTransportNodeByName(module, stub_config)
         if node is None:

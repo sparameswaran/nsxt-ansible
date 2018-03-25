@@ -86,8 +86,8 @@
 
     - name: NSX-T Edge Transport Node
       nsxt_transport_node:
-        display_name: "{{ hostvars[item] }}"
-        node_id: "{{ hostvars['localhost'].edge_node_uuid }}"
+        display_name: "{{ item }}"
+        node_name: "{{ item }}"
         static_ip_pool_id: "{{ ippool.id }}"
         host_switch_name: "{{ hostvars['localhost'].hostswitch }}"
         transport_zone_endpoints: 
@@ -106,10 +106,10 @@
 
     - name: NSX-T Edge Cluster
       nsxt_edge_cluster:
-        display_name: "{{ hostvars['localhost'].edge_clustr }}"
+        display_name: "{{ hostvars['localhost'].edge_cluster }}"
         description: "Default Edge Cluster"
         members:
-          - nsx-edge1
+          - edge1
         tags:
           nsc/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
@@ -149,7 +149,7 @@
 
     - name: NSX-T VLAN Logical Switch 1
       nsxt_logical_switch:
-        display_name: "{{ mgmt-vlan-hostvars['localhost'].vlan_ls_mgmt }}"
+        display_name: "mgmt-vlan-{{ hostvars['localhost'].vlan_ls_mgmt }}"
         description: "Management VLAN Logical Switch"
         transport_zone_id: "{{ vlan_tzone.id }}"
         vlan: "{{ hostvars['localhost'].vlan_ls_mgmt }}"
@@ -163,7 +163,7 @@
 
     - name: NSX-T VLAN Logical Switch 2
       nsxt_logical_switch:
-        display_name: "{{ vMotion-vlan-hostvars['localhost'].vlan_ls_vmotion }}"
+        display_name: "vMotion-vlan-{{ hostvars['localhost'].vlan_ls_vmotion }}"
         description: "vMotion VLAN Logical Switch"
         transport_zone_id: "{{ vlan_tzone.id }}"
         vlan: "{{ hostvars['localhost'].vlan_ls_vmotion }}"
@@ -177,7 +177,7 @@
 
     - name: NSX-T VLAN Logical Switch 3
       nsxt_logical_switch:
-        display_name: "{{ vSan-vlan-hostvars['localhost'].vlan_ls_vsan }}"
+        display_name: "vSan-vlan-{{ hostvars['localhost'].vlan_ls_vsan }}"
         description: "vSANt VLAN Logical Switch"
         transport_zone_id: "{{ vlan_tzone.id }}"
         vlan: "{{ hostvars['localhost'].vlan_ls_mgmt }}"
@@ -262,11 +262,11 @@
   tasks:
     - name: NSX-T Fabric Node
       nsxt_fabric_node:
-        display_name: "{{ hostvars[item] }}"
+        display_name: "{{ item }}"
         ip_address: "{{ hostvars[item].ansible_ssh_host }}"
         node_username: "{{ hostvars[item].ansible_ssh_user }}"
         node_passwd: "{{ hostvars[item].ansible_ssh_pass }}"
-        thumbprint: "{{ hostvars[item].sslthumb }}"
+        thumbprint: "{{ hostvars[item].sslthumb[0] }}"
         os_type: "ESXI"
         os_version: "6.5.0"
         state: present
@@ -278,8 +278,8 @@
 
     - name: NSX-T Transport Node
       nsxt_transport_node:
-        display_name: "{{ hostvars[item] }}"
-        node_id: "{{ fnode.id }}"
+        display_name: "{{ item }}"
+        node_name: "{{ item }}"
         static_ip_pool_id: "{{ ippool.id }}"
         host_switch_name: "{{ hostvars['localhost'].hostswitch }}"
         transport_zone_endpoints: 

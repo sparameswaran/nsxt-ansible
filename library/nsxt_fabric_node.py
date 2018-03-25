@@ -72,21 +72,21 @@ def createNode(module, stub_config):
     )
     try:
         fnodes_svc.create(newNode)
-        time.sleep(20)
-        resultNode = getNodeByName(module, stub_config)
-        status_svc = Status(stub_config)
-        while True:
-            fn_status = status_svc.get(resultNode.id)
-            if fn_status.host_node_deployment_status == "INSTALL_IN_PROGRESS":
-                time.sleep(10)
-            elif fn_status.host_node_deployment_status == "INSTALL_SUCCESSFUL":
-                time.sleep(5)
-                return resultNode
-            else:
-                module.fail_json(msg='Error in Node status: %s'%(str(fn_status)))
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
         module.fail_json(msg='API Error creating node: %s'%(api_error.error_message))
+    time.sleep(20)
+    resultNode = getNodeByName(module, stub_config)
+    status_svc = Status(stub_config)
+    while True:
+        fn_status = status_svc.get(resultNode.id)
+        if fn_status.host_node_deployment_status == "INSTALL_IN_PROGRESS":
+            time.sleep(10)
+        elif fn_status.host_node_deployment_status == "INSTALL_SUCCESSFUL":
+            time.sleep(5)
+            return resultNode
+        else:
+            module.fail_json(msg='Error in Node status: %s'%(str(fn_status)))
 
 
 def deleteNode(module, node, stub_config):
