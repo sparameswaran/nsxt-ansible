@@ -140,10 +140,12 @@ def main():
 #    if module.params['lags']:
 #        lag_list = createListOfLags(module, stub_config, active_list)
 
-    standby_list = []
-    for standby_uplink in module.params['standby_list']:
-        uplink = Uplink(standby_uplink, uplink_type)
-        standby_list.append(uplink)
+    standby_list = None
+    if module.params['standby_list']:
+        standby_list = []
+        for standby_uplink in module.params['standby_list']:
+            uplink = Uplink(standby_uplink, uplink_type)
+            standby_list.append(uplink)
 
     teaming=TeamingPolicy(active_list, module.params['policy'], standby_list)
 

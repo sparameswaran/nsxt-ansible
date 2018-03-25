@@ -1,0 +1,19 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: NSX-T Logical Switch
+      nsxt_logical_switch:
+        display_name: "testLS"
+        description: "My Test Logical Switch"
+        transport_zone_id: "7812b909-352c-4b20-94f7-2f8f22628b79"
+        tags:
+          project: demo2
+          ncp/cluster: k8s-cluster1
+        state: absent
+        nsx_manager: "10.29.12.209"
+        nsx_username: "admin"
+        nsx_passwd: 'VMware1!'
+      register: ls
+  tags: ls
