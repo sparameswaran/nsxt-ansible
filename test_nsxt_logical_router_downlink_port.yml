@@ -1,0 +1,23 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: NSX-T Logical Router Downlink Port
+      nsxt_logical_router_downlink_port:
+        display_name: "testDwnPort"
+        description: "My Test Logical Router Downlink Port"
+        logical_router_id: "f073d3ab-5324-4445-a4ef-fc21a4e31763"
+        linked_logical_switch_port_id: "c744aa57-6b66-402e-abbc-a0085fd46b9c"
+        subnets:
+           - ip_addresses: ["192.168.30.1"]
+             prefix_length: 24
+        tags:
+          project: demo
+          ncp/cluster: k8s-cluster1
+        state: present
+        nsx_manager: "10.29.12.209"
+        nsx_username: "admin"
+        nsx_passwd: 'VMware1!'
+      register: lrdp
+  tags: lrdp
