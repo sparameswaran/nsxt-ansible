@@ -4,11 +4,11 @@
   gather_facts: False
   tasks:
     - name: NSX-T T1 Logical Router
-      nsxt_logical_router:
+      nsxt_t1_logical_router:
         display_name: "MyT1Router"
         description: "My Test T1"
-#        edge_cluster_id: f6e31d8e-8054-41e1-a442-911fb0a171f4
-        router_type: 'TIER1'
+        edge_cluster_id: f6e31d8e-8054-41e1-a442-911fb0a171f4
+        connected_t0_id: "7e814e13-2cc2-4194-9178-08a85ba4ab0c"
         tags:
           project: demo
           ncp/cluster: k8s-cluster1
