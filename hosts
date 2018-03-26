@@ -35,7 +35,7 @@ tep_pool_gw="192.168.20.1"
 edge_uplink_profile_name="edge-uplink-profile"
 edge_uplink_profile_mtu=1600
 edge_uplink_profile_vlan=20
-edge_interface="fp-eth2"
+edge_interface="fp-eth1"
 
 esxi_uplink_profile_name="esxi-uplink-profile"
 esxi_uplink_profile_mtu=1600

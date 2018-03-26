@@ -1,6 +1,6 @@
 ---
 - name: Deploy NSX-T OVAs
-  hosts: jumphost
+  hosts: localhost
   gather_facts: False
   vars_files:
     - ./answerfile.yml

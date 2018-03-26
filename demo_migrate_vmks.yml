@@ -1,0 +1,19 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: NSX-T Migrate VMKs
+      nsxt_migrate_vmks:
+        display_name: "{{ item }}"
+        vlan_logical_switches: "mgmt-vlan-307,vMotion-vlan-1078,vSan-vlan-1079"
+        vmks: "vmk0,vmk1,vmk2"
+        pnics:
+          uplink-1: vmnic3
+          uplink-2: vmnic4
+        nsx_manager: "10.29.12.209"
+        nsx_username: "admin"
+        nsx_passwd: 'VMware1!'
+      register: vmk_migrate
+      with_items: "{{ groups['nsxtransportnodes'] }}"
+

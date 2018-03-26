@@ -275,6 +275,15 @@
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       with_items: "{{ groups['nsxtransportnodes'] }}"
       register: fnode
+      async: 7200
+      poll: 0
+
+    - name: Check Fabric Node Status
+      async_status: jid={{ item.ansible_job_id }}
+      register: job_result
+      until: job_result.finished
+      with_items: "{{ fnode.results }}"
+      retries: 30
 
     - name: NSX-T Transport Node
       nsxt_transport_node:
