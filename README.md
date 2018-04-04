@@ -3,10 +3,10 @@ Repository for NSX-T Ansible Modules
 
 Forked from github.com/yasensim/nsxt-ansible
 
-# nsxt python lib pre-reqs
 It is for Internal PoC. This is not VMware suppoted and might disappear at some point of time.
 Use at your own risk!
 
+Forked from github.com/yasensim/nsxt-ansible
 
 ## Getting started
 
@@ -14,6 +14,8 @@ I assume you already have ansible installed. Connecting VMs to NSX-T Logical Swi
 https://github.com/ansible/ansible/pull/37979
 
 Download nsxt python sdk and vapi from here https://my.vmware.com/web/vmware/details?downloadGroup=NSX-T-210-SDK-PYTHON&productId=673
+
+# nsxt python lib pre-reqs
 
 You should have the following files locally:
 ```
@@ -41,5 +43,5 @@ pip install vapi_common_client-2.7.0-py2.py3-none-any.whl
 ```
 
 ```
-git clone https://github.com/yasensim/nsxt-ansible.git
+git clone https://github.com/sparameswaran/nsxt-ansible.git
 ```
