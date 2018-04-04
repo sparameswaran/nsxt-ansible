@@ -27,7 +27,6 @@ vapi_runtime-2.7.0-py2.py3-none-any.whl
 
 Install the dependancies and the required packages.
 
-
 ```
 apt-get -y update
 apt-get -y install python-pip openssl libxml2 libxml2-dev libxslt1-dev libssl-dev libffi-dev python-dev build-essential
