@@ -3,7 +3,7 @@ Repository for NSX-T Ansible Modules
 
 Forked from github.com/yasensim/nsxt-ansible
 
-# Setup
+# nsxt python lib pre-reqs
 ```
 apt-get -y update
 apt-get -y install python-pip openssl libxml2 libxml2-dev libxslt1-dev libssl-dev libffi-dev python-dev build-essential

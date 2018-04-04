@@ -1,0 +1,82 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: NSX-T VLAN Logical Switch 1
+      nsxt_logical_switch:
+        display_name: "mgmt-vlan-{{ hostvars['localhost'].vlan_ls_mgmt }}"
+        description: "Management VLAN Logical Switch"
+        transport_zone_id: "{{ vlan_tzone.id }}"
+        vlan: "{{ hostvars['localhost'].vlan_ls_mgmt }}"
+        tags:
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: ls1
+
+    - name: NSX-T VLAN Logical Switch 2
+      nsxt_logical_switch:
+        display_name: "vMotion-vlan-{{ hostvars['localhost'].vlan_ls_vmotion }}"
+        description: "vMotion VLAN Logical Switch"
+        transport_zone_id: "{{ vlan_tzone.id }}"
+        vlan: "{{ hostvars['localhost'].vlan_ls_vmotion }}"
+        tags:
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: ls2
+
+    - name: NSX-T VLAN Logical Switch 3
+      nsxt_logical_switch:
+        display_name: "vSan-vlan-{{ hostvars['localhost'].vlan_ls_vsan }}"
+        description: "vSANt VLAN Logical Switch"
+        transport_zone_id: "{{ vlan_tzone.id }}"
+        vlan: "{{ hostvars['localhost'].vlan_ls_mgmt }}"
+        tags:
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: ls3
+
+    - name: NSX-T Logical Switch
+      nsxt_logical_switch:
+        display_name: "{{ hostvars['localhost'].ls_name }}"
+        description: "Management Logical Switch"
+        transport_zone_id: "{{ overlay_tzone.id }}"
+        tags:
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: lsswitch
+
+    - name: NSX-T Logical Switch Port
+      nsxt_logical_switch_port:
+        display_name: "LSPort"
+        description: "Logical Switch Port"
+        logical_switch_id: "{{ lsswitch.id }}"
+        tags:
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: lsp
+
+    - name: Remove previous SSH keys from known_hosts - NSX nodes
+      command: ssh-keygen -R "{{ hostvars[item]['ansible_ssh_host'] }}"
+      register: command_result
+      failed_when: "command_result.rc > 0 and command_result.rc != 255"
+      with_items: "{{ groups['nsxtransportnodes'] }}"
+    - name: add host to known_hosts - Managers
+      shell: mkdir -p ~/.ssh; ssh-keyscan -H "{{ hostvars[item]['ansible_ssh_host'] }}" >> ~/.ssh/known_hosts
+      with_items: "{{ groups['nsxtransportnodes'] }}"
+

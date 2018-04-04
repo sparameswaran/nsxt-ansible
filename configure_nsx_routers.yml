@@ -1,0 +1,102 @@
+---
+- include: configure_nsx_logical_switch.yml outer_item="{{t1}}"
+- include_tasks: configure_nsx_logical_switch.yml 
+
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  vars_files:
+    - ./answerfile.yml
+
+  tasks:
+    - name: NSX-T T0 Logical Router
+      nsxt_t0_logical_router:
+        display_name: "{{ hostvars['localhost'].t0_name }}"
+        description: "Default T0"
+        edge_cluster_id: "{{ edge_cluster.id }}"
+        high_availability_mode: "{{ hostvars['localhost'].t0_ha_mode }}"
+        tags:
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: t0
+
+    - name: NSX-T T1 Logical Router
+      nsxt_t1_logical_router:
+        display_name: "{{ hostvars['localhost'].t1_name }}"
+        description: "Management T1"
+        edge_cluster_id: "{{ edge_cluster.id }}"
+        connected_t0_id: "{{ t0.id }}"
+        tags:
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: t1
+      # with_items: "{{ groups['t1'] }}"
+      # - include: configure_nsx_logical_switch.yml outer_item="{{t1}}"
+      # - include_tasks: configure_nsx_logical_switch.yml 
+      # - include: inner.yml outer_item="{{ outer_item }}"
+        
+
+      #   loop_control:
+      #     loop_var: outer_item
+
+    # - name: NSX-T Logical Switch
+    #   nsxt_logical_switch:
+    #     display_name: "{{ hostvars['localhost'].ls_name }}"
+    #     description: "Management Logical Switch"
+    #     transport_zone_id: "{{ overlay_tzone.id }}"
+    #     tags:
+    #       ncp/cluster: "{{ hostvars['localhost'].tag }}"
+    #     state: present
+    #     nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+    #     nsx_username: 'admin'
+    #     nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+    #   register: lsswitch
+
+    # - name: NSX-T Logical Switch Port
+    #   nsxt_logical_switch_port:
+    #     display_name: "LSPort"
+    #     description: "Logical Switch Port"
+    #     logical_switch_id: "{{ lsswitch.id }}"
+    #     tags:
+    #       ncp/cluster: "{{ hostvars['localhost'].tag }}"
+    #     state: present
+    #     nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+    #     nsx_username: 'admin'
+    #     nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+    #   register: lsp
+
+    # - name: NSX-T Logical Router Downlink Port
+    #   nsxt_logical_router_downlink_port:
+    #     display_name: "DwnPort"
+    #     description: "Logical Router Downlink Port"
+    #     logical_router_id: "{{ t1.id }}"
+    #     linked_logical_switch_port_id: "{{ lsp.id }}"
+    #     subnets:
+    #        - ip_addresses: "{{ hostvars['localhost'].t1_ip }}"
+    #          prefix_length: "{{ hostvars['localhost'].t1_mask }}"
+    #     tags:
+    #       ncp/cluster: "{{ hostvars['localhost'].tag }}"
+    #     state: present
+    #     nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+    #     nsx_username: 'admin'
+    #     nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+    #   register: lrdp
+
+    - name: Remove previous SSH keys from known_hosts - NSX nodes
+      command: ssh-keygen -R "{{ hostvars[item]['ansible_ssh_host'] }}"
+      register: command_result
+      failed_when: "command_result.rc > 0 and command_result.rc != 255"
+      with_items: "{{ groups['nsxtransportnodes'] }}"
+    - name: add host to known_hosts - Managers
+      shell: mkdir -p ~/.ssh; ssh-keyscan -H "{{ hostvars[item]['ansible_ssh_host'] }}" >> ~/.ssh/known_hosts
+      with_items: "{{ groups['nsxtransportnodes'] }}"
+
+
+
+
