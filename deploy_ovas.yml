@@ -63,8 +63,8 @@
       async: 7200
       poll: 0
       register: deploy_nsx_ctrl
-    - name: Wait 5 minutes before start deploying Edges
-      pause: minutes=5
+    - name: Wait 3 minutes before start deploying Edges
+      pause: minutes=3
     - name: deploy NSX Gw OVA
       deploy_ova:
         ovftool_path: "{{ ovfToolPath }}"
@@ -95,8 +95,8 @@
       async: 7200
       poll: 0
       register: deploy_nsx_edges
-    - name: Wait 5 minutes before start verifying the deployment
-      pause: minutes=5
+    - name: Wait 3 minutes before start verifying the deployment
+      pause: minutes=3
     - name: Check if NSX Managers deployment has finished
       async_status:
         jid: "{{ item.ansible_job_id }}"

@@ -16,6 +16,8 @@ deployVcUser: 'administrator@yasen.local'
 deployVcPassword: 'VMware1!'
 sshEnabled: True
 allowSSHRootAccess: True
+portgroupExtVLAN: 'Infrastructure'
+portgroupTransportVLAN: 'AllVlansVSS'
 
 managers:
   nsxmanager:
