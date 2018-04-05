@@ -1,0 +1,22 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: NSX-T Static route
+      nsxt_static_route:
+        network: '192.168.80.0/24'
+        next_hops:
+          - 1.1.1.2
+        admin_distance: 1
+        description: "My Test Static Route"
+        router_name: 'LB-T1'
+        tags:
+          project: demo
+          ncp/cluster: k8s-cluster2
+        state: present
+        nsx_manager: "10.29.12.210"
+        nsx_username: "admin"
+        nsx_passwd: 'VMware1!'
+      register: stroute
+  tags: stroute
