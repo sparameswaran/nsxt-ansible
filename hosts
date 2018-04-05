@@ -40,6 +40,7 @@ edge_interface="fp-eth1"
 esxi_uplink_profile_name="esxi-uplink-profile"
 esxi_uplink_profile_mtu=1600
 esxi_uplink_profile_vlan=20
+esxi_uplink_vmnics="[ uplink-1: vmnic1 ,  uplink-2: vmnic2 ]"
 
 edge_cluster="Test Cluster"
 

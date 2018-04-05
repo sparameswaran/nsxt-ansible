@@ -251,9 +251,7 @@
         transport_zone_endpoints: 
           - "{{ hostvars['localhost'].overlay_tz_name }}"
           - "{{ hostvars['localhost'].vlan_tz_name }}"
-        pnics:
-          uplink-1: vmnic3
-          uplink-2: vmnic4
+        pnics: "{{ hostvars['localhost'].esxi_uplink_vmnics }}"
         uplink_profile: "{{ hostvars['localhost'].esxi_uplink_profile_name }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
