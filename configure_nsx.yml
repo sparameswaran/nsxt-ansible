@@ -108,10 +108,7 @@
       nsxt_edge_cluster:
         display_name: "{{ hostvars['localhost'].edge_cluster }}"
         description: "Default Edge Cluster"
-        members:
-          {% for item in groups['nsxedges'] %}
-          - {{ item.name }}
-          {% endfor %}
+        members: "{{ groups['nsxedges'] }}"
         tags:
           ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
