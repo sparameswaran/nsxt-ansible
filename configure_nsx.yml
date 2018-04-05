@@ -264,8 +264,14 @@
           - "{{ hostvars['localhost'].overlay_hostswitch }}"
         transport_zone_endpoints:
           - "{{ hostvars['localhost'].overlay_tz_name }}"
+<<<<<<< HEAD
         pnics: "{{ esxi_uplink_vmnics }}"
         uplink_profile: "{{ hostvars['localhost'].esxi_overlay_profile_name }}"
+=======
+          - "{{ hostvars['localhost'].vlan_tz_name }}"
+        pnics: "{{ hostvars['localhost'].esxi_uplink_vmnics }}"
+        uplink_profile: "{{ hostvars['localhost'].esxi_uplink_profile_name }}"
+>>>>>>> Handle variable # of vmnics for hosts
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
