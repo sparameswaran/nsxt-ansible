@@ -7,13 +7,20 @@
       nsxt_t1_logical_router:
         display_name: "MyT1Router"
         description: "My Test T1"
-        edge_cluster_id: f6e31d8e-8054-41e1-a442-911fb0a171f4
-        connected_t0_id: "7e814e13-2cc2-4194-9178-08a85ba4ab0c"
+        edge_cluster_id: 6ffa3083-f0a0-49d5-a426-166a2405145a
+        connected_t0_id: "8dcf838b-65b8-4ffe-b949-573833d48b75"
+        advertise:
+          enabled: True
+          advertise_lb_snat_ip: False
+          advertise_lb_vip: True
+          advertise_nat_routes: True
+          advertise_nsx_connected_routes: True
+          advertise_static_routes: False
         tags:
           project: demo
           ncp/cluster: k8s-cluster1
         state: present
-        nsx_manager: "10.29.12.209"
+        nsx_manager: "10.29.12.210"
         nsx_username: "admin"
         nsx_passwd: 'VMware1!'
       register: t1
