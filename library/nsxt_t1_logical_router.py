@@ -30,6 +30,8 @@ try:
     from com.vmware.nsx.model_client import ResourceReference
     from com.vmware.nsx_client import LogicalRouterPorts
     from com.vmware.nsx.model_client import LogicalRouterPort
+    from com.vmware.nsx.model_client import AdvertisementConfig
+    from com.vmware.nsx.logical_routers.routing_client import Advertisement
 
     from com.vmware.vapi.std.errors_client import NotFound
     from vmware.vapi.lib import connect
@@ -137,6 +139,7 @@ def main():
             edge_cluster_id=dict(required=False, type='str', default=None),
             connected_t0_id=dict(required=False, type='str', default=None),
             high_availability_mode=dict(required=False, type='str', default='ACTIVE_STANDBY', choices=['ACTIVE_STANDBY', 'ACTIVE_ACTIVE']),
+            advertise=dict(required=False, type='dict', default=None),
             tags=dict(required=False, type='dict', default=None),
             state=dict(required=False, type='str', default="present", choices=['present', 'absent']),
             nsx_manager=dict(required=True, type='str'),
@@ -157,6 +160,23 @@ def main():
     security_context = create_user_password_security_context(module.params["nsx_username"], module.params["nsx_passwd"])
     connector.set_security_context(security_context)
     requests.packages.urllib3.disable_warnings()
+    desired_adv_config = AdvertisementConfig()
+    if module.params['advertise']:
+        if 'enabled' in module.params['advertise']:
+            desired_adv_config.enabled = module.params['advertise']['enabled']
+        else:
+            desired_adv_config.enabled = True
+        if 'advertise_lb_snat_ip' in module.params['advertise'] and module.params['advertise']['advertise_lb_snat_ip']:
+            desired_adv_config.advertise_lb_snat_ip = module.params['advertise']['advertise_lb_snat_ip']
+        if 'advertise_lb_vip' in module.params['advertise'] and module.params['advertise']['advertise_lb_vip']:
+            desired_adv_config.advertise_lb_vip = module.params['advertise']['advertise_lb_vip']
+        if 'advertise_nat_routes' in module.params['advertise'] and module.params['advertise']['advertise_nat_routes']:
+            desired_adv_config.advertise_nat_routes = module.params['advertise']['advertise_nat_routes']
+        if 'advertise_nsx_connected_routes' in module.params['advertise'] and module.params['advertise']['advertise_nsx_connected_routes']:
+            desired_adv_config.advertise_nsx_connected_routes = module.params['advertise']['advertise_nsx_connected_routes']
+        if 'advertise_static_routes' in module.params['advertise'] and module.params['advertise']['advertise_static_routes']:
+            desired_adv_config.advertise_static_routes = module.params['advertise']['advertise_static_routes']
+
     tags=None
     if module.params['tags'] is not None:
         tags = []
@@ -181,10 +201,22 @@ def main():
                 mylr = getLogicalRouterByName(module, stub_config)
                 if module.params['connected_t0_id']:
                     connectT0(mylr, module, stub_config)
+                if module.params['advertise']:
+                    adv_svc = Advertisement(stub_config)
+                    adv_config = adv_svc.get(mylr.id)
+                    adv_config.enabled = desired_adv_config.enabled
+                    adv_config.advertise_lb_snat_ip = desired_adv_config.advertise_lb_snat_ip
+                    adv_config.advertise_lb_vip = desired_adv_config.advertise_lb_vip
+                    adv_config.advertise_nat_routes = desired_adv_config.advertise_nat_routes
+                    adv_config.advertise_nsx_connected_routes = desired_adv_config.advertise_nsx_connected_routes
+                    adv_config.advertise_static_routes = desired_adv_config.advertise_static_routes
+                    adv_svc.update(mylr.id, adv_config)
                 module.exit_json(changed=True, object_name=module.params['display_name'], id=mylr.id, message="Logical Router with name %s created!"%(module.params['display_name']))
             except Error as ex:
                 module.fail_json(msg='API Error listing Logical Routers: %s'%(str(ex)))
         elif lr:
+            adv_svc = Advertisement(stub_config)
+            adv_config = adv_svc.get(lr.id)
             changed = False
             if tags != lr.tags:
                 changed = True
@@ -197,6 +229,57 @@ def main():
                 module.exit_json(changed=True, object_name=module.params['display_name'], id=new_lr.id, message="Logical Router with name %s has been modified!"%(module.params['display_name']))
             if compareLrpT0T1(lr, module, stub_config):
                 module.exit_json(changed=True, object_name=module.params['display_name'], id=lr.id, message="Logical Router uplink on T1 with name %s has been modified!"%(module.params['display_name']))
+            if module.params['advertise']:
+                changed = False
+                if ('enabled' not in module.params['advertise']):
+                    changed = False
+                elif module.params['advertise']['enabled'] != adv_config.enabled:
+                    adv_config.enabled = desired_adv_config.enabled
+                    changed = True
+                if ('advertise_lb_snat_ip' not in module.params['advertise']):
+                    if adv_config.advertise_lb_snat_ip:
+                        adv_config.advertise_lb_snat_ip = None
+                        changed = True
+                elif module.params['advertise']['advertise_lb_snat_ip'] != adv_config.advertise_lb_snat_ip:
+                    adv_config.advertise_lb_snat_ip = desired_adv_config.advertise_lb_snat_ip
+                    changed = True
+
+                if ('advertise_lb_vip' not in module.params['advertise']):
+                    if adv_config.advertise_lb_vip:
+                        adv_config.advertise_lb_vip = None
+                        changed = True
+                elif module.params['advertise']['advertise_lb_vip'] != adv_config.advertise_lb_vip:
+                    adv_config.advertise_lb_vip = desired_adv_config.advertise_lb_vip
+                    changed = True
+ 
+                if ('advertise_nat_routes' not in module.params['advertise']):
+                    if adv_config.advertise_nat_routes:
+                        adv_config.advertise_nat_routes = None
+                        changed = True
+                elif module.params['advertise']['advertise_nat_routes'] != adv_config.advertise_nat_routes:
+                    adv_config.advertise_nat_routes = desired_adv_config.advertise_nat_routes
+                    changed = True
+
+                if ('advertise_nsx_connected_routes' not in module.params['advertise']):
+                    if adv_config.advertise_nsx_connected_routes:
+                        adv_config.advertise_nsx_connected_routes = None
+                        changed = True
+                elif module.params['advertise']['advertise_nsx_connected_routes'] != adv_config.advertise_nsx_connected_routes:
+                    adv_config.advertise_nsx_connected_routes = desired_adv_config.advertise_nsx_connected_routes
+                    changed = True
+
+                if ('advertise_static_routes' not in module.params['advertise']):
+                    if adv_config.advertise_static_routes:
+                        adv_config.advertise_static_routes = None
+                        changed = True
+                elif module.params['advertise']['advertise_static_routes'] != adv_config.advertise_static_routes:
+                    adv_config.advertise_static_routes = desired_adv_config.advertise_static_routes
+                    changed = True
+
+                if changed:
+                    adv_svc.update(lr.id, adv_config)
+                    module.exit_json(changed=True, object_name=module.params['display_name'], id=lr.id, message="Logical Router advertisement config on T1 with name %s has been modified!"%(module.params['display_name']))
+
             module.exit_json(changed=False, object_name=module.params['display_name'], id=lr.id, message="Logical Router with name %s already exists!"%(module.params['display_name']))
 
     elif module.params['state'] == "absent":
