@@ -36,10 +36,9 @@
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       register: t1
-      # with_items: "{{ groups['t1'] }}"
-      # - include: configure_nsx_logical_switch.yml outer_item="{{t1}}"
-      # - include_tasks: configure_nsx_logical_switch.yml 
-      # - include: inner.yml outer_item="{{ outer_item }}"
+      with_items: "{{ groups['t1'] }}"
+      - include: configure_nsx_logical_switch.yml t1="{{t1}}"
+      - include_tasks: configure_nsx_logical_switch.yml
         
 
       #   loop_control:
