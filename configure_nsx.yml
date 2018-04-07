@@ -88,6 +88,7 @@
         display_name: "{{ item }}"
         node_name: "{{ item }}"
         static_ip_pool_id: "{{ tepippool.id }}"
+
         host_switch_name:
           - "{{ hostvars['localhost'].overlay_hostswitch }}"
           - "{{ hostvars['localhost'].vlan_hostswitch }}"
@@ -260,18 +261,28 @@
         display_name: "{{ item }}"
         node_name: "{{ item }}"
         static_ip_pool_id: "{{ tepippool.id }}"
+<<<<<<< HEAD
         host_switch_name:
           - "{{ hostvars['localhost'].overlay_hostswitch }}"
         transport_zone_endpoints:
+=======
+        host_switch_name: "{{ hostvars['localhost'].overlay_hostswitch }}"
+        transport_zone_endpoints: 
+>>>>>>> cleanup
           - "{{ hostvars['localhost'].overlay_tz_name }}"
 <<<<<<< HEAD
         pnics: "{{ esxi_uplink_vmnics }}"
         uplink_profile: "{{ hostvars['localhost'].esxi_overlay_profile_name }}"
 =======
           - "{{ hostvars['localhost'].vlan_tz_name }}"
+<<<<<<< HEAD
         pnics: "{{ hostvars['localhost'].esxi_uplink_vmnics }}"
         uplink_profile: "{{ hostvars['localhost'].esxi_uplink_profile_name }}"
 >>>>>>> Handle variable # of vmnics for hosts
+=======
+        pnics: "{{ esxi_uplink_vmnics }}"
+        uplink_profile: "{{ hostvars['localhost'].esxi_overlay_profile_name }}"
+>>>>>>> cleanup
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
