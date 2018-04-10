@@ -1,0 +1,23 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: NSX-T T0 Uplink
+      nsxt_t0_uplink:
+        display_name: "uplink-2"
+        description: "My Test T0 Uplink"
+        edge_cluster_member: edge2
+        urpf: 'NONE'
+        t0_router: 'DefaultT0Router'
+        logical_switch_port_id: '3a470fe2-30c5-4d7a-b40c-e397f1f6bc9a'
+        ip_address: '10.29.12.218/27'
+        tags:
+          project: demo
+          ncp/cluster: k8s-cluster2
+        state: absent
+        nsx_manager: "10.29.12.210"
+        nsx_username: "admin"
+        nsx_passwd: 'VMware1!'
+      register: t0uplink
+  tags: t0uplink
