@@ -1,0 +1,19 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: NSX-T T0 HA VIP
+      nsxt_t0_ha_vip:
+        vip_address: "10.29.12.218/27"
+        enabled: True
+        t0_router: DefaultT0Router
+        redundant_uplink_port_ids:
+          - 8be08f86-0bf9-4f24-86c1-9ede259d1d74
+          - b3026e8f-835e-4324-8203-68b5bccea8ce
+        state: present
+        nsx_manager: "10.29.12.210"
+        nsx_username: "admin"
+        nsx_passwd: 'VMware1!'
+      register: havip
+  tags: havip
