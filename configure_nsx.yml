@@ -88,7 +88,6 @@
         display_name: "{{ item }}"
         node_name: "{{ item }}"
         static_ip_pool_id: "{{ tepippool.id }}"
-
         host_switch_name:
           - "{{ hostvars['localhost'].overlay_hostswitch }}"
           - "{{ hostvars['localhost'].vlan_hostswitch }}"
@@ -145,6 +144,20 @@
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       register: t0
+
+    - name: NSX-T VLAN Uplink Switch
+      nsxt_logical_switch:
+        display_name: "vlan-uplink-switch"
+        description: "VLAN Uplink Switch"
+        transport_zone_id: "{{ vlan_tzone.id }}"
+        tags:
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        vlan: 0
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: vlanlsswitch
 
     # - name: NSX-T T1 Logical Router
     #   nsxt_t1_logical_router:
@@ -261,28 +274,12 @@
         display_name: "{{ item }}"
         node_name: "{{ item }}"
         static_ip_pool_id: "{{ tepippool.id }}"
-<<<<<<< HEAD
         host_switch_name:
           - "{{ hostvars['localhost'].overlay_hostswitch }}"
         transport_zone_endpoints:
-=======
-        host_switch_name: "{{ hostvars['localhost'].overlay_hostswitch }}"
-        transport_zone_endpoints: 
->>>>>>> cleanup
           - "{{ hostvars['localhost'].overlay_tz_name }}"
-<<<<<<< HEAD
         pnics: "{{ esxi_uplink_vmnics }}"
         uplink_profile: "{{ hostvars['localhost'].esxi_overlay_profile_name }}"
-=======
-          - "{{ hostvars['localhost'].vlan_tz_name }}"
-<<<<<<< HEAD
-        pnics: "{{ hostvars['localhost'].esxi_uplink_vmnics }}"
-        uplink_profile: "{{ hostvars['localhost'].esxi_uplink_profile_name }}"
->>>>>>> Handle variable # of vmnics for hosts
-=======
-        pnics: "{{ esxi_uplink_vmnics }}"
-        uplink_profile: "{{ hostvars['localhost'].esxi_overlay_profile_name }}"
->>>>>>> cleanup
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
