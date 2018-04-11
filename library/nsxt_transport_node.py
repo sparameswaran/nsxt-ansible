@@ -101,26 +101,36 @@ def getUplinkProfileId(module, stub_config):
 def createTransportNode(module, stub_config):
     tz_endpoints=getTransportZoneEndPoint(module, stub_config)
     uplink_profile_id=getUplinkProfileId(module, stub_config)
+    
+    hsprof_list = []
     hsptie=HostSwitchProfileTypeIdEntry(
         key=HostSwitchProfileTypeIdEntry.KEY_UPLINKHOSTSWITCHPROFILE,
         value=uplink_profile_id
     )
-    hsprof_list = []
     hsprof_list.append(hsptie)
 
     pnic_list = []
-    for key, value in module.params["pnics"].items():
+    for pnicentry in module.params["pnics"]:
+      for key, value in pnicentry.items():
         pnic=Pnic(device_name=value, uplink_name=key)
         pnic_list.append(pnic)
 
-    hs=HostSwitch(
-        host_switch_name=module.params["host_switch_name"],
-        host_switch_profile_ids=hsprof_list,
-        pnics=pnic_list,
-        static_ip_pool_id=module.params["static_ip_pool_id"]
-    )
     hs_list= []
-    hs_list.append(hs)
+    index = 0
+    for host_switch_name in module.params["host_switch_name"]:
+        static_ip_pool_id=module.params["static_ip_pool_id"]
+        if 'overlay' not in host_switch_name.lower():
+            static_ip_pool_id=None
+
+        hs=HostSwitch(
+            host_switch_name=host_switch_name,
+            host_switch_profile_ids=hsprof_list,
+            pnics=[ pnic_list[index] ],
+            static_ip_pool_id=static_ip_pool_id
+        )
+        hs_list.append(hs)
+        index += 1
+
     tn_svc = TransportNodes(stub_config)
     transport_node=TransportNode(
         display_name=module.params['display_name'],
@@ -146,7 +156,8 @@ def updateTransportNode(module, stub_config):
     node = getTransportNodeByName(module, stub_config)
 
     pnic_list = []
-    for key, value in module.params["pnics"].items():
+    for pnicentry in module.params["pnics"]:
+      for key, value in pnicentry.items():
         pnic=Pnic(device_name=value, uplink_name=key)
         pnic_list.append(pnic)
 
@@ -173,14 +184,23 @@ def updateTransportNode(module, stub_config):
         hsprof_list = []
         hsprof_list.append(hsptie)
 
-        hs=HostSwitch(
-            host_switch_name=module.params["host_switch_name"],
-            host_switch_profile_ids=hsprof_list,
-            pnics=pnic_list,
-            static_ip_pool_id=module.params["static_ip_pool_id"]
-        )
         hs_list= []
-        hs_list.append(hs)
+        index = 0
+        for host_switch_name in module.params["host_switch_name"]:
+            static_ip_pool_id=module.params["static_ip_pool_id"]
+            if 'overlay' not in host_switch_name.lower():
+                static_ip_pool_id=None
+
+            hs=HostSwitch(
+                host_switch_name=host_switch_name,
+                host_switch_profile_ids=hsprof_list,
+                pnics=[ pnic_list[index] ],
+                static_ip_pool_id=static_ip_pool_id
+            )
+            hs_list.append(hs)
+            index += 1
+
+
         tn_svc = TransportNodes(stub_config)
         node.host_switches=hs_list
         node.transport_zone_endpoints=tz_endpoints
@@ -253,9 +273,9 @@ def main():
             node_name=dict(required=False, type='str'),
             maintenance_mode=dict(required=False, type='str', choices=['DISABLED', 'ENABLED', 'FORCE_ENABLED']),
             static_ip_pool_id=dict(required=True, type='str'),
-            host_switch_name=dict(required=False, type='str'),
+            host_switch_name=dict(required=False, type='list'),
             transport_zone_endpoints=dict(required=False, type='list'),
-            pnics=dict(required=False, type='dict'),
+            pnics=dict(required=False, type='list'),
             uplink_profile=dict(required=False, type='str'),
             state=dict(required=False, type='str', default="present", choices=['present', 'absent']),
             nsx_manager=dict(required=True, type='str'),

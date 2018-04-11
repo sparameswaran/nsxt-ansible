@@ -48,7 +48,7 @@
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       register: tepippool
-      
+
     - name: Single Uplink Profile
       nsxt_uplink_profile:
         display_name: "{{ hostvars['localhost'].edge_single_uplink_profile_name }}"
@@ -88,12 +88,13 @@
         display_name: "{{ item }}"
         node_name: "{{ item }}"
         static_ip_pool_id: "{{ tepippool.id }}"
-        host_switch_name: "{{ hostvars['localhost'].hostswitch }}"
+        host_switch_name: 
+          - "{{ hostvars['localhost'].overlay_hostswitch }}"
+          - "{{ hostvars['localhost'].vlan_hostswitch }}"
         transport_zone_endpoints: 
           - "{{ hostvars['localhost'].overlay_tz_name }}"
           - "{{ hostvars['localhost'].vlan_tz_name }}"
-        pnics:
-          uplink-1: "{{ hostvars['localhost'].edge_uplink_interface }}"
+        pnics: "{{ edge_uplink_vmnics }}"          
         uplink_profile: "{{ hostvars['localhost'].edge_single_uplink_profile_name }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
@@ -130,6 +131,20 @@
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       register: t0
+
+    - name: NSX-T VLAN Uplink Switch
+      nsxt_logical_switch:
+        display_name: "vlan-uplink-switch"
+        description: "VLAN Uplink Switch"
+        transport_zone_id: "{{ vlan_tzone.id }}"
+        tags:
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        vlan: 0
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: vlanlsswitch
 
     # - name: NSX-T T1 Logical Router
     #   nsxt_t1_logical_router:
@@ -246,10 +261,10 @@
         display_name: "{{ item }}"
         node_name: "{{ item }}"
         static_ip_pool_id: "{{ tepippool.id }}"
-        host_switch_name: "{{ hostvars['localhost'].overlay_hostswitch }}"
+        host_switch_name: 
+          - "{{ hostvars['localhost'].overlay_hostswitch }}"
         transport_zone_endpoints: 
           - "{{ hostvars['localhost'].overlay_tz_name }}"
-          - "{{ hostvars['localhost'].vlan_tz_name }}"
         pnics: "{{ esxi_uplink_vmnics }}"
         uplink_profile: "{{ hostvars['localhost'].esxi_overlay_profile_name }}"
         state: present
