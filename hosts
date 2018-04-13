@@ -1,29 +1,49 @@
 [localhost]
-localhost       ansible_connection=local
+localhost ansible_connection=local
 
 [nsxmanagers]
-nsx-manager 		ansible_ssh_host=10.29.12.209		ansible_ssh_user=root ansible_ssh_pass=VMware1!
+nsx-manager ansible_ssh_host=10.29.12.203 ansible_ssh_user=root ansible_ssh_pass=VMware1! dc=MyDC1 cluster=Management datastore=Datastore-10 portgroup=Infrastructure gw=10.29.12.193 mask=255.255.255.224 hostname=nsxmanager
 
 [nsxcontrollers]
-nsx-controller01	ansible_ssh_host=10.29.12.221		ansible_ssh_user=root ansible_ssh_pass=VMware1!
-nsx-controller02	ansible_ssh_host=10.29.12.222		ansible_ssh_user=root ansible_ssh_pass=VMware1!
-nsx-controller03	ansible_ssh_host=10.29.12.203		ansible_ssh_user=root ansible_ssh_pass=VMware1!
+nsx-controller01 ansible_ssh_host=10.29.12.204 ansible_ssh_user=root ansible_ssh_pass=VMware1! dc=MyDC1 cluster=Management datastore=Datastore-10 portgroup=Infrastructure gw=10.29.12.193 mask=255.255.255.224 hostname=nsxctrl1
+nsx-controller02 ansible_ssh_host=10.29.12.205 ansible_ssh_user=root ansible_ssh_pass=VMware1! dc=MyDC1 cluster=Management datastore=Datastore-10 portgroup=Infrastructure gw=10.29.12.193 mask=255.255.255.224 hostname=nsxctrl2
+nsx-controller03 ansible_ssh_host=10.29.12.206 ansible_ssh_user=root ansible_ssh_pass=VMware1! dc=MyDC1 cluster=Management datastore=Datastore-10 portgroup=Infrastructure gw=10.29.12.193 mask=255.255.255.224 hostname=nsxctrl3
 
 [nsxedges]
-edge1		ansible_ssh_host=10.29.12.199		ansible_ssh_user=root ansible_ssh_pass=VMware1!
-#nsx-edge2		ansible_ssh_host=10.29.12.215		ansible_ssh_user=root ansible_ssh_pass=VMware1!
+edge1 ansible_ssh_host=10.29.12.207 ansible_ssh_user=root ansible_ssh_pass=VMware1! dc=MyDC1 cluster=Management datastore=Datastore-10 portgroup=Infrastructure gw=10.29.12.193 mask=255.255.255.224 hostname=edge1 portgroupExt=AllVlansVSS portgroupTransport=AllVlansVSS
+edge2 ansible_ssh_host=10.29.12.208 ansible_ssh_user=root ansible_ssh_pass=VMware1! dc=MyDC1 cluster=Management datastore=Datastore-10 portgroup=Infrastructure gw=10.29.12.193 mask=255.255.255.224 hostname=edge2 portgroupExt=AllVlansVSS portgroupTransport=AllVlansVSS
 
 [nsxtransportnodes]
-esx1		ansible_ssh_host=10.29.12.207		ansible_ssh_user=root ansible_ssh_pass=VMware1!
-esx4		ansible_ssh_host=10.29.12.208		ansible_ssh_user=root ansible_ssh_pass=VMware1!
+esx1 ansible_ssh_host=10.29.12.197 ansible_ssh_user=root ansible_ssh_pass=VMware1!
+esx2 ansible_ssh_host=10.29.12.198 ansible_ssh_user=root ansible_ssh_pass=VMware1!
+esx3 ansible_ssh_host=10.29.12.199 ansible_ssh_user=root ansible_ssh_pass=VMware1!
+esx4 ansible_ssh_host=10.29.12.200 ansible_ssh_user=root ansible_ssh_pass=VMware1!
+
+
 
 [localhost:vars]
+ovfToolPath='/usr/bin'
+nsxOvaPath='/root/ISOs'
+sshEnabled='True'
+allowSSHRootAccess='True'
+managerOva='nsx-unified-appliance-2.1.0.0.0.7328369.ova'
+controllerOva='nsx-controller-2.1.0.0.0.7328367.ova'
+edgeOva='nsx-edge-2.1.0.0.0.7328372.ova'
+
+deployVcIPAddress='10.29.12.202'
+deployVcUser='administrator@yasen.local'
+deployVcPassword='VMware1!'
+
+dns_server="10.29.12.201"
+dns_domain="yasen.local"
+ntp_server="10.29.12.201"
+
 
 tag_scope="ncp/cluster"
 tag="k8s-cluster1"
 overlay_tz_name="tz1"
 vlan_tz_name="ESXi-MNGMT-TZ"
-hostswitch="hs1"
+hostswitch="nvds1"
 
 tep_pool_name="tep-pool"
 tep_pool_cidr="192.168.20.0/24"
@@ -45,6 +65,12 @@ edge_cluster="Test Cluster"
 
 t0_name="DefaultT0Router"
 t0_ha_mode="ACTIVE_STANDBY"
+t0_vlan_uplink='307'
+t0_ip1='10.29.12.216/27'
+t0_ip2='10.29.12.217/27'
+t0_vip='10.29.12.218/27'
+t0_gw='10.29.12.193'
+
 
 t1_name="MngmtT1Router"
 t1_ip=["192.168.10.1"]

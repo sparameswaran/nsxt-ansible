@@ -2,4 +2,3 @@
 - include: deploy_ovas.yml
 - include: configure_controllers.yml
 - include: configure_nsx.yml
-# - include: demo_migrate_vmks.yml

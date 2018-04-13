@@ -103,13 +103,13 @@
       with_items: "{{ groups['nsxedges'] }}"
       register: edgetnode
 
-
     - name: NSX-T Edge Cluster
       nsxt_edge_cluster:
         display_name: "{{ hostvars['localhost'].edge_cluster }}"
         description: "Default Edge Cluster"
         members:
           - edge1
+          - edge2
         tags:
           nsc/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
@@ -146,6 +146,111 @@
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       register: t1
+
+    - name: NSX-T VLAN Logical Switch for t0 uplink
+      nsxt_logical_switch:
+        display_name: "uplink-{{ hostvars['localhost'].t0_vlan_uplink }}"
+        description: "T0 Uplink VLAN Logical Switch"
+        transport_zone_id: "{{ vlan_tzone.id }}"
+        vlan: "{{ hostvars['localhost'].t0_vlan_uplink }}"
+        tags:
+          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: uplink_ls
+
+    - name: NSX-T Logical Switch Port for uplink1
+      nsxt_logical_switch_port:
+        display_name: "to_t0_uplink1"
+        description: "Logical Switch Port"
+        logical_switch_id: "{{ uplink_ls.id }}"
+        tags:
+          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: uplink_lsp
+
+    - name: NSX-T T0 Uplink 1
+      nsxt_t0_uplink:
+        display_name: "uplink-1"
+        description: "My Test T0 Uplink"
+        edge_cluster_member: edge1
+        urpf: 'NONE'
+        t0_router: "{{ hostvars['localhost'].t0_name }}"
+        logical_switch_port_id: "{{ uplink_lsp.id }}"
+        ip_address: "{{ hostvars['localhost'].t0_ip1 }}"
+        tags:
+          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: t0uplink1
+
+    - name: NSX-T Logical Switch Port for uplink2
+      nsxt_logical_switch_port:
+        display_name: "to_t0_uplink2"
+        description: "Logical Switch Port"
+        logical_switch_id: "{{ uplink_ls.id }}"
+        tags:
+          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: uplink_lsp2
+
+    - name: NSX-T T0 Uplink 2
+      nsxt_t0_uplink:
+        display_name: "uplink-2"
+        description: "My Test T0 Uplink"
+        edge_cluster_member: edge2
+        urpf: 'NONE'
+        t0_router: "{{ hostvars['localhost'].t0_name }}"
+        logical_switch_port_id: "{{ uplink_lsp2.id }}"
+        ip_address: "{{ hostvars['localhost'].t0_ip2 }}"
+        tags:
+          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: t0uplink2
+
+    - name: NSX-T T0 HA VIP
+      nsxt_t0_ha_vip:
+        vip_address: "{{ hostvars['localhost'].t0_vip}}"
+        enabled: True
+        t0_router: "{{ hostvars['localhost'].t0_name }}"
+        redundant_uplink_port_ids:
+          - "{{ t0uplink1.id }}"
+          - "{{ t0uplink2.id }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: havip
+
+    - name: NSX-T T0 Default Static route
+      nsxt_static_route:
+        network: '0.0.0.0/0'
+        next_hops:
+          - "{{ hostvars['localhost'].t0_gw }}"
+        admin_distance: 1
+        description: "Default Static Route"
+        router_name: "{{ hostvars['localhost'].t0_name }}"
+        tags:
+          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: stroute
+
 
     - name: NSX-T VLAN Logical Switch 1
       nsxt_logical_switch:
