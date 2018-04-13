@@ -55,8 +55,6 @@
         /opt/vmware/nsx-cli/bin/scripts/nsxcli 
         -c get certificate api thumbprint
       register: thumbprint
-    - name: Wait 5 minutes before start adding Edges and Controllers
-      pause: minutes=5
   tags: nsxman_thumb
 
 - name: Join controllers and gateways to NSX-Manager
@@ -87,8 +85,8 @@
       command: >
         /opt/vmware/nsx-cli/bin/scripts/nsxcli -c initialize control-cluster
       register: initialize
-    - name: Wait 3 more minutes and try again as it seems the controller is not ready
-      pause: minutes=3
+    - name: Wait 2 more minutes and try again as it seems the controller is not ready
+      pause: minutes=2
       when: "'initialization timed out' in initialize.stdout"
     - name: Retry when first try didn't work
       command: >
@@ -102,8 +100,6 @@
     - nsx-controller03
   serial: 1
   gather_facts: False
-  vars_files:
-    - ./answerfile.yml
   tasks:
     - name: Set security-model on controllers
       command: >
@@ -156,5 +152,5 @@
   hosts: localhost
   gather_facts: False
   tasks:
-    - name: Wait for 1 minute before starting with the initial configuration
-      pause: seconds=60
+    - name: Wait for 30 seconds before starting with the initial configuration
+      pause: seconds=30
