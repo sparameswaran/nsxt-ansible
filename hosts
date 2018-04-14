@@ -43,7 +43,9 @@ tag_scope="ncp/cluster"
 tag="k8s-cluster1"
 overlay_tz_name="tz1"
 vlan_tz_name="ESXi-MNGMT-TZ"
+edge_vlan_tz_name="ESXi-MNGMT-TZ"
 hostswitch="nvds1"
+vlan_hostswitch="vlan_nvds"
 
 tep_pool_name="tep-pool"
 tep_pool_cidr="192.168.20.0/24"
@@ -56,6 +58,7 @@ edge_uplink_profile_name="edge-uplink-profile"
 edge_uplink_profile_mtu=1600
 edge_uplink_profile_vlan=20
 edge_interface="fp-eth1"
+edge_uplink_interface="fp-eth2"
 
 esxi_uplink_profile_name="esxi-uplink-profile"
 esxi_uplink_profile_mtu=1600

@@ -29,6 +29,18 @@
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       register: vlan_tzone
 
+    - name: NSX-T VLAN Transport Zone for Edge Uplink
+      nsxt_transport_zone:
+        display_name: "{{ hostvars['localhost'].edge_vlan_tz_name }}"
+        description: "Ansible created TZ for VLAN Traffic"
+        host_switch_name: "{{ hostvars['localhost'].vlan_hostswitch }}"
+        transport_type: 'VLAN'
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: edge_vlan_tzone
+
     - name: NSX-T IP Pool
       nsxt_ip_pool:
         display_name: "{{ hostvars['localhost'].tep_pool_name }}"
@@ -88,14 +100,19 @@
       nsxt_transport_node:
         display_name: "{{ item }}"
         node_name: "{{ item }}"
-        static_ip_pool_id: "{{ ippool.id }}"
-        host_switch_name: "{{ hostvars['localhost'].hostswitch }}"
         transport_zone_endpoints: 
           - "{{ hostvars['localhost'].overlay_tz_name }}"
-          - "{{ hostvars['localhost'].vlan_tz_name }}"
-        pnics:
-          uplink-1: "{{ hostvars['localhost'].edge_interface }}"
-        uplink_profile: "{{ hostvars['localhost'].edge_uplink_profile_name }}"
+          - "{{ hostvars['localhost'].edge_vlan_tz_name }}"
+        host_switch:
+          - name: "{{ hostvars['localhost'].hostswitch }}"
+            pnics:
+              uplink-1: "{{ hostvars['localhost'].edge_interface }}"
+            uplink_profile: "{{ hostvars['localhost'].edge_uplink_profile_name }}"
+            static_ip_pool_id: "{{ ippool.id }}"
+          - name: "{{ hostvars['localhost'].vlan_hostswitch }}"
+            pnics:
+              uplink-1: "{{ hostvars['localhost'].edge_uplink_interface }}"
+            uplink_profile: "{{ hostvars['localhost'].edge_uplink_profile_name }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -151,7 +168,7 @@
       nsxt_logical_switch:
         display_name: "uplink-{{ hostvars['localhost'].t0_vlan_uplink }}"
         description: "T0 Uplink VLAN Logical Switch"
-        transport_zone_id: "{{ vlan_tzone.id }}"
+        transport_zone_id: "{{ edge_vlan_tzone.id }}"
         vlan: "{{ hostvars['localhost'].t0_vlan_uplink }}"
         tags:
           nsc/cluster: "{{ hostvars['localhost'].tag }}"
@@ -394,15 +411,16 @@
       nsxt_transport_node:
         display_name: "{{ item }}"
         node_name: "{{ item }}"
-        static_ip_pool_id: "{{ ippool.id }}"
-        host_switch_name: "{{ hostvars['localhost'].hostswitch }}"
         transport_zone_endpoints: 
           - "{{ hostvars['localhost'].overlay_tz_name }}"
           - "{{ hostvars['localhost'].vlan_tz_name }}"
-        pnics:
-          uplink-1: vmnic3
-          uplink-2: vmnic4
-        uplink_profile: "{{ hostvars['localhost'].esxi_uplink_profile_name }}"
+        host_switch:
+          - name: "{{ hostvars['localhost'].hostswitch }}"
+            static_ip_pool_id: "{{ ippool.id }}"
+            pnics:
+              uplink-1: vmnic3
+              uplink-2: vmnic4
+            uplink_profile: "{{ hostvars['localhost'].esxi_uplink_profile_name }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
