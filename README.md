@@ -3,6 +3,13 @@ Repository for NSX-T Ansible Modules
 It is for Internal PoC. This is not VMware suppoted and might disappear at some point of time.
 Use at your own risk!
 
+For usage with NSX-T 2.1 please clone the v2.1 branch.
+```
+git clone -b v2.1 https://github.com/yasensim/nsxt-ansible.git
+```
+
+There might be changed in the master branch!
+
 
 ## Getting started
 
@@ -36,5 +43,5 @@ pip install vapi_common_client-2.7.0-py2.py3-none-any.whl
 ```
 
 ```
-git clone https://github.com/yasensim/nsxt-ansible.git
+git clone -b v2.1 https://github.com/yasensim/nsxt-ansible.git
 ```

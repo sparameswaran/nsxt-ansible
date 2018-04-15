@@ -1,0 +1,19 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: NSX-T IP Block
+      nsxt_ip_block:
+        display_name: "k8s ip block"
+        description: "My Test IP Block"
+        cidr: 192.168.15.0/24
+        tags:
+          project: demo
+          ncp/cluster: k8s-cluster1
+        state: present
+        nsx_manager: "10.29.12.203"
+        nsx_username: "admin"
+        nsx_passwd: 'VMware1!'
+      register: ipblock
+  tags: ipblock

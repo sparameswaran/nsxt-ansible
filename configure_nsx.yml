@@ -10,7 +10,7 @@
         host_switch_name: "{{ hostvars['localhost'].hostswitch }}"
         transport_type: 'OVERLAY'
         tags:
-          nsc/cluster: k8s-cluster1
+          ncp/cluster: k8s-cluster1
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -54,7 +54,7 @@
             dns_suffix: "{{ hostvars['localhost'].tep_pool_suffix }}"
             gateway_ip: "{{ hostvars['localhost'].tep_pool_gw }}"
         tags:
-          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -71,7 +71,7 @@
         policy: "FAILOVER_ORDER"
         transport_vlan: 20
         tags:
-          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -89,7 +89,7 @@
         policy: "LOADBALANCE_SRCID"
         transport_vlan: 20
         tags:
-          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -128,7 +128,7 @@
           - edge1
           - edge2
         tags:
-          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -143,7 +143,7 @@
         edge_cluster_id: "{{ edge_cluster.id }}"
         high_availability_mode: "{{ hostvars['localhost'].t0_ha_mode }}"
         tags:
-          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -157,7 +157,7 @@
         edge_cluster_id: "{{ edge_cluster.id }}"
         connected_t0_id: "{{ t0.id }}"
         tags:
-          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -171,7 +171,7 @@
         transport_zone_id: "{{ edge_vlan_tzone.id }}"
         vlan: "{{ hostvars['localhost'].t0_vlan_uplink }}"
         tags:
-          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -184,7 +184,7 @@
         description: "Logical Switch Port"
         logical_switch_id: "{{ uplink_ls.id }}"
         tags:
-          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -201,7 +201,7 @@
         logical_switch_port_id: "{{ uplink_lsp.id }}"
         ip_address: "{{ hostvars['localhost'].t0_ip1 }}"
         tags:
-          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -214,7 +214,7 @@
         description: "Logical Switch Port"
         logical_switch_id: "{{ uplink_ls.id }}"
         tags:
-          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -231,7 +231,7 @@
         logical_switch_port_id: "{{ uplink_lsp2.id }}"
         ip_address: "{{ hostvars['localhost'].t0_ip2 }}"
         tags:
-          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -261,7 +261,7 @@
         description: "Default Static Route"
         router_name: "{{ hostvars['localhost'].t0_name }}"
         tags:
-          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -276,7 +276,7 @@
         transport_zone_id: "{{ vlan_tzone.id }}"
         vlan: "{{ hostvars['localhost'].vlan_ls_mgmt }}"
         tags:
-          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -290,7 +290,7 @@
         transport_zone_id: "{{ vlan_tzone.id }}"
         vlan: "{{ hostvars['localhost'].vlan_ls_vmotion }}"
         tags:
-          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -304,7 +304,7 @@
         transport_zone_id: "{{ vlan_tzone.id }}"
         vlan: "{{ hostvars['localhost'].vlan_ls_mgmt }}"
         tags:
-          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -317,7 +317,7 @@
         description: "Management Logical Switch"
         transport_zone_id: "{{ overlay_tzone.id }}"
         tags:
-          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -330,7 +330,7 @@
         description: "Logical Switch Port"
         logical_switch_id: "{{ lsswitch.id }}"
         tags:
-          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -347,7 +347,7 @@
            - ip_addresses: "{{ hostvars['localhost'].t1_ip }}"
              prefix_length: "{{ hostvars['localhost'].t1_mask }}"
         tags:
-          nsc/cluster: "{{ hostvars['localhost'].tag }}"
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -428,4 +428,16 @@
       with_items: "{{ groups['nsxtransportnodes'] }}"
       register: tnode
 
+    - name: NSX-T IP Block
+      nsxt_ip_block:
+        display_name: "k8s ip block"
+        description: "My Test IP Block"
+        cidr: 192.168.15.0/24
+        tags:
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: ipblock
 
