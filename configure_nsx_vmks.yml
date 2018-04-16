@@ -2,6 +2,8 @@
 - hosts: localhost
   connection: local
   gather_facts: False
+  vars_files:
+    - ./answerfile.yml  
   tasks:
     - name: NSX-T VLAN Logical Switch 1
       nsxt_logical_switch:
@@ -44,32 +46,6 @@
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       register: ls3
-
-    - name: NSX-T Logical Switch
-      nsxt_logical_switch:
-        display_name: "{{ hostvars['localhost'].ls_name }}"
-        description: "Management Logical Switch"
-        transport_zone_id: "{{ overlay_tzone.id }}"
-        tags:
-          ncp/cluster: "{{ hostvars['localhost'].tag }}"
-        state: present
-        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
-        nsx_username: 'admin'
-        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
-      register: lsswitch
-
-    - name: NSX-T Logical Switch Port
-      nsxt_logical_switch_port:
-        display_name: "LSPort"
-        description: "Logical Switch Port"
-        logical_switch_id: "{{ lsswitch.id }}"
-        tags:
-          ncp/cluster: "{{ hostvars['localhost'].tag }}"
-        state: present
-        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
-        nsx_username: 'admin'
-        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
-      register: lsp
 
     - name: Remove previous SSH keys from known_hosts - NSX nodes
       command: ssh-keygen -R "{{ hostvars[item]['ansible_ssh_host'] }}"

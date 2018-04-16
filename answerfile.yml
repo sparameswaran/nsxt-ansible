@@ -18,6 +18,9 @@ sshEnabled: True
 allowSSHRootAccess: True
 portgroupExtVLAN: 'Infrastructure'
 portgroupTransportVLAN: 'AllVlansVSS'
+deploy_ova: True
+configure_vmks: False
+
 
 managers:
   nsxmanager:
