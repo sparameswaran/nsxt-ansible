@@ -418,8 +418,8 @@
           - name: "{{ hostvars['localhost'].hostswitch }}"
             static_ip_pool_id: "{{ ippool.id }}"
             pnics:
-              uplink-1: vmnic3
-              uplink-2: vmnic4
+              uplink-1: "{{ hostvars[item]['uplink-1'] }}"
+              uplink-2: "{{ hostvars[item]['uplink-2'] }}"
             uplink_profile: "{{ hostvars['localhost'].esxi_uplink_profile_name }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
@@ -430,8 +430,8 @@
 
     - name: NSX-T IP Block
       nsxt_ip_block:
-        display_name: "k8s ip block"
-        description: "My Test IP Block"
+        display_name: "test ip block"
+        description: "Test IP Block created by Ansible"
         cidr: 192.168.15.0/24
         tags:
           ncp/cluster: "{{ hostvars['localhost'].tag }}"
