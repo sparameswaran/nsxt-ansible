@@ -2,6 +2,7 @@
 - include: deploy_ovas.yml
   when: deploy_ova
 - include: configure_controllers.yml
+  when: deploy_ova
 - include: configure_nsx.yml
 - include: configure_nsx_routers.yml
 - include: configure_nsx_vmks.yml
