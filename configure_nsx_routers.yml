@@ -60,6 +60,7 @@
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
         #include: configure_nsx_logical_switch.yml t1="{{t1}}" overlay_tzone_id="{{ overlay_tzone.id}}"
       register: t1
+      with_items: "{{ t1_routers }}"
 
     # Save the t1 router ids with their names to use for downlink router port creation
     - set_fact:

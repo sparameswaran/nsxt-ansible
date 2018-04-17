@@ -119,8 +119,8 @@
 
     - name: NSX-T T0 Logical Router
       nsxt_t0_logical_router:
-        display_name: "{{t0_router.edge_name}}"
-        description: "Default T0 Router {{t0_router.edge_name}}"
+        display_name: "{{t0_router.name}}"
+        description: "Default T0 Router {{t0_router.name}}"
         edge_cluster_id: "{{ edge_cluster.id }}"
         high_availability_mode: "{{ t0_router.ha_mode }}"
         tags:
@@ -172,7 +172,23 @@
         nsx_username: "admin"
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       register: t0uplink
-  
+
+    - name: NSX-T T0 Static route
+      nsxt_static_route:
+        description: "NSX-T {{ t0_router.name}} Static route"
+        network: "{{t0_router.static_route.network}}"
+        next_hops:
+        - "{{ t0_router.static_route.next_hop }}"
+        admin_distance: "{{t0_router.static_route.admin_distance}}"
+        router_name: "{{t0_router.name}}"
+        tags:
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: "admin"
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: t0_static_route
+
 - name: Get ESX nodes information
   hosts: nsxtransportnodes
   gather_facts: True
@@ -215,7 +231,7 @@
       register: job_result
       until: job_result.finished
       with_items: "{{ fnode.results }}"
-      retries: 30
+      retries: 50
 
     - name: NSX-T Transport Node
       nsxt_transport_node:
