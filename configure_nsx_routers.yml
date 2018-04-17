@@ -2,22 +2,7 @@
 - hosts: localhost
   connection: local
   gather_facts: False
-  vars_files:
-    - ./answerfile.yml
   tasks:
-    - name: NSX-T Edge Cluster
-      nsxt_edge_cluster:
-        display_name: "{{ hostvars['localhost'].edge_cluster }}"
-        description: "Default Edge Cluster"
-        members: "{{ groups['nsxedges'] }}"
-        tags:
-          ncp/cluster: "{{ hostvars['localhost'].tag }}"
-        state: present
-        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
-        nsx_username: 'admin'
-        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
-      register: edge_cluster
-
     - name: NSX-T Overlay Transport Zone
       nsxt_transport_zone:
         display_name: "{{ hostvars['localhost'].overlay_tz_name }}"
@@ -36,7 +21,7 @@
       nsxt_t0_logical_router:
         display_name: "{{ t0_router.name }}"
         description: "Default T0"
-        edge_cluster_id: "{{ edge_cluster.id }}"
+        edge_cluster_id: "{{ edge_cluster.id }}" # Comes from previous run configure_nsx.yml
         high_availability_mode: "{{ t0_router.ha_mode }}"
         tags:
           ncp/cluster: "{{ hostvars['localhost'].tag }}"
@@ -50,7 +35,7 @@
       nsxt_t1_logical_router:
         display_name: "{{ item.name}}"
         description: "{{ item.name}}"
-        edge_cluster_id: "{{ edge_cluster.id }}"
+        edge_cluster_id: "{{ edge_cluster.id }}" # Comes from previous run configure_nsx.yml
         connected_t0_id: "{{ t0.id }}"
         tags:
           ncp/cluster: "{{ hostvars['localhost'].tag }}"

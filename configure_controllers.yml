@@ -3,8 +3,6 @@
   hosts: localhost
   connection: local
   gather_facts: False
-  vars_files:
-    - ./answerfile.yml
   tasks:
     - name: Remove previous SSH keys from known_hosts - Managers
       command: 'ssh-keygen -R "{{ item.value.ipAddress }}"'
