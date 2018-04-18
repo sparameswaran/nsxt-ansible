@@ -33,8 +33,8 @@
       async: 7200
       poll: 0
       register: deploy_nsx_man
-    - name: Wait 2 minutes before start deploying controllers
-      pause: minutes=2
+    - name: Wait 4 minutes before start deploying controllers
+      pause: minutes=4
     - name: deploy NSX Controllers
       deploy_ova:
         ovftool_path: "{{ ovfToolPath }}"
@@ -95,28 +95,28 @@
       async: 7200
       poll: 0
       register: deploy_nsx_edges
-    - name: Wait 3 minutes before start verifying the deployment
-      pause: minutes=3
+    - name: Wait 5 minutes before start verifying the deployment
+      pause: minutes=5
     - name: Check if NSX Managers deployment has finished
       async_status:
         jid: "{{ item.ansible_job_id }}"
       register: job_result
       until: job_result.finished
       with_items: "{{ deploy_nsx_man.results }}"
-      retries: 10
+      retries: 30
     - name: Check if NSX Controllers deployment has finished
       async_status:
         jid: "{{ item.ansible_job_id }}"
       register: job_result
       until: job_result.finished
       with_items: "{{ deploy_nsx_ctrl.results }}"
-      retries: 10
+      retries: 30
     - name: Check if NSX Edges deployment has finished
       async_status:
         jid: "{{ item.ansible_job_id }}"
       register: job_result
       until: job_result.finished
       with_items: "{{ deploy_nsx_edges.results }}"
-      retries: 10
+      retries: 30
 
 
