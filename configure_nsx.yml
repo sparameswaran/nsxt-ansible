@@ -103,7 +103,6 @@
       with_items: "{{ groups['nsxedges'] }}"
       register: edgetnode
 
-
     - name: NSX-T Edge Cluster
       nsxt_edge_cluster:
         display_name: "{{ hostvars['localhost'].edge_cluster }}"

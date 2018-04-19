@@ -1,0 +1,166 @@
+---
+# From yfauser one-cloud-nsxt
+- name: Customize OVA Files
+  hosts: localhost
+  gather_facts: True
+  vars_files:
+    - ./customize_ova_vars.yml
+
+  tasks:
+    # - name: retrieve the OVA URLs and Filenames from the Buildweb API
+    #   buildweb_uris: build_id={{ nsx_build_number }}
+    #   tags: set_facts
+    - name: Set target OVF Filename for Manager
+      set_fact: nsx_manager_ovf="{{ nsx_manager_filename | regex_replace('ova', 'ovf') }}"
+      tags: set_facts
+    - name: Set target OVF Filename for Controller
+      set_fact: nsx_controller_ovf="{{ nsx_controller_filename | regex_replace('ova', 'ovf') }}"
+      tags: set_facts
+    - name: Set target OVF Filename for Gw
+      set_fact: nsx_gw_ovf="{{ nsx_gw_filename | regex_replace('ova', 'ovf') }}"
+      tags: set_facts
+    - name: Set target OVF Path for Manager
+      set_fact: nsx_manager_path="{{ nsx_manager_filename | regex_replace('.ova', '') }}"
+      tags: set_facts
+    - name: Set target OVF Path for Controller
+      set_fact: nsx_controller_path="{{ nsx_controller_filename | regex_replace('.ova', '') }}"
+      tags: set_facts
+    - name: Set target OVF Path for Gw
+      set_fact: nsx_gw_path="{{ nsx_gw_filename | regex_replace('.ova', '') }}"
+      tags: set_facts
+    - name: Set target MF Filename for Manager
+      set_fact: nsx_manager_mf="{{ nsx_manager_filename | regex_replace('ova', 'mf') }}"
+      tags: set_facts
+    - name: Set target MF Filename for Controller
+      set_fact: nsx_controller_mf="{{ nsx_controller_filename | regex_replace('ova', 'mf') }}"
+      tags: set_facts
+    - name: Set target MF Filename for Gw
+      set_fact: nsx_gw_mf="{{ nsx_gw_filename | regex_replace('ova', 'mf') }}"
+      tags: set_facts
+
+    - name: create the target OVF folders
+      file: path="{{ ova_file_path }}/{{ item }}" state=directory
+      with_items:
+        - "{{ nsx_manager_path }}"
+        - "{{ nsx_controller_path }}"
+        - "{{ nsx_gw_path }}"
+      tags: create_pathes
+
+    - name: extract OVFs from OVAs using ovftool
+      command: "{{ ovftool_path }}/ovftool --allowExtraConfig {{ ova_file_path }}/{{ item.ova_filename }} {{ ova_file_path }}/{{ item.path }}/{{ item.ovf_filename }}"
+      args:
+        creates: "{{ ova_file_path }}/{{ item.path }}/{{ item.ovf_filename }}"
+      with_items:
+        - { path: "{{ nsx_manager_path }}", ovf_filename: "{{ nsx_manager_ovf }}", ova_filename: "{{ nsx_manager_filename }}" }
+        - { path: "{{ nsx_controller_path }}", ovf_filename: "{{ nsx_controller_ovf }}", ova_filename: "{{ nsx_controller_filename }}" }
+        - { path: "{{ nsx_gw_path }}", ovf_filename: "{{ nsx_gw_ovf }}", ova_filename: "{{ nsx_gw_filename }}" }
+      tags: extract
+
+    - name: remove reservations from OVF Files
+      lineinfile:
+        dest: "{{ ova_file_path }}/{{ item.path }}/{{ item.ovf_filename }}"
+        regexp: "Reservation"
+        state: absent
+      with_items:
+        - { path: "{{ nsx_manager_path }}", ovf_filename: "{{ nsx_manager_ovf }}" }
+        - { path: "{{ nsx_controller_path }}", ovf_filename: "{{ nsx_controller_ovf }}" }
+        - { path: "{{ nsx_gw_path }}", ovf_filename: "{{ nsx_gw_ovf }}" }
+      tags: reservations
+
+    - name: size down NSX Manager
+      replace:
+        dest: "{{ ova_file_path }}/{{ nsx_manager_path }}/{{ nsx_manager_ovf }}"
+        regexp: "{{ item.regexp }}"
+        replace: "{{ item.replace}}"
+      with_items:
+        - { regexp: "4 virtual CPU", replace: "{{nsx_t_sizing.mgr.cpu}} virtual CPU" }
+        - { regexp: "<rasd:VirtualQuantity>4</rasd:VirtualQuantity>", replace: "<rasd:VirtualQuantity>{{nsx_t_sizing.mgr.cpu}}</rasd:VirtualQuantity>" }
+        - { regexp: "16384 MB of memory", replace: "{{nsx_t_sizing.mgr.memory}} MB of memory" }
+        - { regexp: "<rasd:VirtualQuantity>16384</rasd:VirtualQuantity>", replace: "<rasd:VirtualQuantity>{{nsx_t_sizing.mgr.memory}}</rasd:VirtualQuantity>" }
+        - { regexp: "32768MB of memory", replace: "{{nsx_t_sizing.mgr.memory}} MB of memory" }
+        - { regexp: "<rasd:VirtualQuantity>32768</rasd:VirtualQuantity>", replace: "<rasd:VirtualQuantity>{{nsx_t_sizing.mgr.memory}}</rasd:VirtualQuantity>" }
+      tags: downsize_nsxman
+
+    - name: size down NSX Controller
+      replace:
+        dest: "{{ ova_file_path }}/{{ nsx_controller_path }}/{{ nsx_controller_ovf }}"
+        regexp: "{{ item.regexp }}"
+        replace: "{{ item.replace}}"
+      with_items:
+        - { regexp: "4 virtual CPU", replace: "{{nsx_t_sizing.controller.cpu}} virtual CPU" }
+        - { regexp: "<rasd:VirtualQuantity>4</rasd:VirtualQuantity>", replace: "<rasd:VirtualQuantity>{{{{nsx_t_sizing.controller.cpu}}</rasd:VirtualQuantity>" }
+        - { regexp: "16384 MB of memory", replace: "{{nsx_t_sizing.controller.memory}} MB of memory" }
+        - { regexp: "<rasd:VirtualQuantity>16384</rasd:VirtualQuantity>", replace: "<rasd:VirtualQuantity>{{nsx_t_sizing.controller.memory}}</rasd:VirtualQuantity>" }
+      tags: downsize_nsxcont
+
+    - name: calculate new NSX Manager OVF File Checksum
+      stat:
+        checksum_algorithm: sha256
+        path: "{{ ova_file_path }}/{{ nsx_manager_path }}/{{ nsx_manager_ovf }}"
+      register: nsx_man_checksum
+      tags: calc_checksum
+
+    - name: calculate new NSX Controller OVF File Checksum
+      stat:
+        checksum_algorithm: sha256
+        path: "{{ ova_file_path }}/{{ nsx_controller_path }}/{{ nsx_controller_ovf }}"
+      register: nsx_cont_checksum
+      tags: calc_checksum
+
+    - name: calculate new NSX Gw OVF File Checksum
+      stat:
+        checksum_algorithm: sha256
+        path: "{{ ova_file_path }}/{{ nsx_gw_path }}/{{ nsx_gw_ovf }}"
+      register: nsx_gw_checksum
+      tags: calc_checksum
+
+    - name: delete old checksum in .mf file
+      lineinfile:
+        dest: "{{ ova_file_path }}/{{ item.path }}/{{ item.mf_filename }}"
+        regexp: "{{ item.ovf_filename }}"
+        state: absent
+      with_items:
+        - { path: "{{ nsx_manager_path }}", mf_filename: "{{ nsx_manager_mf }}", ovf_filename: "{{ nsx_manager_ovf }}"}
+        - { path: "{{ nsx_controller_path }}", mf_filename: "{{ nsx_controller_mf }}", ovf_filename: "{{ nsx_controller_ovf }}"}
+        - { path: "{{ nsx_gw_path }}", mf_filename: "{{ nsx_gw_mf }}", ovf_filename: "{{ nsx_gw_ovf }}"}
+      tags: fix_mf_file
+
+    - name: add new checksum in .mf file
+      lineinfile:
+        dest: "{{ ova_file_path }}/{{ item.path }}/{{ item.mf_filename }}"
+        line: "SHA256({{ item.ovf_filename }})= {{ item.checksum }}"
+        state: present
+      with_items:
+        - { path: "{{ nsx_manager_path }}", mf_filename: "{{ nsx_manager_mf }}", ovf_filename: "{{ nsx_manager_ovf }}", checksum: "{{ nsx_man_checksum.stat.checksum }}" }
+        - { path: "{{ nsx_controller_path }}", mf_filename: "{{ nsx_controller_mf }}", ovf_filename: "{{ nsx_controller_ovf }}", checksum: "{{ nsx_cont_checksum.stat.checksum }}" }
+        - { path: "{{ nsx_gw_path }}", mf_filename: "{{ nsx_gw_mf }}", ovf_filename: "{{ nsx_gw_ovf }}", checksum: "{{ nsx_gw_checksum.stat.checksum }}" }
+      tags: fix_mf_file
+
+    - name: delete old ova files
+      file:
+        path: "{{ ova_file_path }}/{{ item.ova_filename }}"
+        state: absent
+      with_items:
+        - { path: "{{ nsx_manager_path }}", ova_filename: "{{ nsx_manager_filename }}" }
+        - { path: "{{ nsx_controller_path }}", ova_filename: "{{ nsx_controller_filename }}" }
+        - { path: "{{ nsx_gw_path }}", ova_filename: "{{ nsx_gw_filename }}" }
+      tags: delete_ovas
+
+    - name: zip OVFs to OVAs using ovftool
+      command: "{{ ovftool_path }}/ovftool --allowExtraConfig {{ ova_file_path }}/{{ item.path }}/{{ item.ovf_filename }} {{ ova_file_path }}/{{ item.ova_filename }}"
+      args:
+        creates: "item.path"
+      with_items:
+        - { path: "{{ nsx_manager_path }}", ovf_filename: "{{ nsx_manager_ovf }}", ova_filename: "{{ nsx_manager_filename }}" }
+        - { path: "{{ nsx_controller_path }}", ovf_filename: "{{ nsx_controller_ovf }}", ova_filename: "{{ nsx_controller_filename }}" }
+        - { path: "{{ nsx_gw_path }}", ovf_filename: "{{ nsx_gw_ovf }}", ova_filename: "{{ nsx_gw_filename }}" }
+      tags: compact
+
+    - name: remove OVF Folders with all Files
+      file: path="{{ ova_file_path }}/{{ item }}" state=absent
+      with_items:
+        - "{{ nsx_manager_path }}"
+        - "{{ nsx_controller_path }}"
+        - "{{ nsx_gw_path }}"
+      tags: delete_paths
+
