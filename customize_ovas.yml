@@ -93,6 +93,21 @@
         - { regexp: "<rasd:VirtualQuantity>16384</rasd:VirtualQuantity>", replace: "<rasd:VirtualQuantity>{{nsx_t_sizing.controller.memory}}</rasd:VirtualQuantity>" }
       tags: downsize_nsxcont
 
+    - name: change size of NSX Edge
+      replace:
+        dest: "{{ ova_file_path }}/{{ nsx_gw_path }}/{{ nsx_gw_ovf }}"
+        regexp: "{{ item.regexp }}"
+        replace: "{{ item.replace}}"
+      with_items:
+        - { regexp: "4 virtual CPU", replace: "{{nsx_t_sizing.edge.cpu}} virtual CPU" }
+        - { regexp: "<rasd:VirtualQuantity>4</rasd:VirtualQuantity>", replace: "<rasd:VirtualQuantity>{{{{nsx_t_sizing.edge.cpu}}</rasd:VirtualQuantity>" }
+        - { regexp: "16384 MB of memory", replace: "{{nsx_t_sizing.edge.memory}} MB of memory" }
+        - { regexp: "<rasd:VirtualQuantity>16384</rasd:VirtualQuantity>", replace: "<rasd:VirtualQuantity>{{nsx_t_sizing.edge.memory}}</rasd:VirtualQuantity>" }
+        - { regexp: "32768MB of memory", replace: "{{nsx_t_sizing.edge.memory}} MB of memory" }
+        - { regexp: "<rasd:VirtualQuantity>32768</rasd:VirtualQuantity>", replace: "<rasd:VirtualQuantity>{{nsx_t_sizing.edge.memory}}</rasd:VirtualQuantity>" }
+  
+      tags: downsize_nsxcont
+
     - name: calculate new NSX Manager OVF File Checksum
       stat:
         checksum_algorithm: sha256
