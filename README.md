@@ -1,7 +1,6 @@
 # nsxt-ansible
 Repository for NSX-T Ansible Modules
-It is for Internal PoC. This is not VMware suppoted and might disappear at some point of time.
-Use at your own risk!
+It is for Internal PoC and is not VMware suppoted!!!
 
 For usage with NSX-T 2.1 please clone the v2.1 branch.
 ```
