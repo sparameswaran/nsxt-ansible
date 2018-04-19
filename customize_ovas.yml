@@ -88,7 +88,7 @@
         replace: "{{ item.replace}}"
       with_items:
         - { regexp: "4 virtual CPU", replace: "{{nsx_t_sizing.controller.cpu}} virtual CPU" }
-        - { regexp: "<rasd:VirtualQuantity>4</rasd:VirtualQuantity>", replace: "<rasd:VirtualQuantity>{{{{nsx_t_sizing.controller.cpu}}</rasd:VirtualQuantity>" }
+        - { regexp: "<rasd:VirtualQuantity>4</rasd:VirtualQuantity>", replace: "<rasd:VirtualQuantity>{{nsx_t_sizing.controller.cpu}}</rasd:VirtualQuantity>" }
         - { regexp: "16384 MB of memory", replace: "{{nsx_t_sizing.controller.memory}} MB of memory" }
         - { regexp: "<rasd:VirtualQuantity>16384</rasd:VirtualQuantity>", replace: "<rasd:VirtualQuantity>{{nsx_t_sizing.controller.memory}}</rasd:VirtualQuantity>" }
       tags: downsize_nsxcont
@@ -100,7 +100,7 @@
         replace: "{{ item.replace}}"
       with_items:
         - { regexp: "4 virtual CPU", replace: "{{nsx_t_sizing.edge.cpu}} virtual CPU" }
-        - { regexp: "<rasd:VirtualQuantity>4</rasd:VirtualQuantity>", replace: "<rasd:VirtualQuantity>{{{{nsx_t_sizing.edge.cpu}}</rasd:VirtualQuantity>" }
+        - { regexp: "<rasd:VirtualQuantity>4</rasd:VirtualQuantity>", replace: "<rasd:VirtualQuantity>{{nsx_t_sizing.edge.cpu}}</rasd:VirtualQuantity>" }
         - { regexp: "16384 MB of memory", replace: "{{nsx_t_sizing.edge.memory}} MB of memory" }
         - { regexp: "<rasd:VirtualQuantity>16384</rasd:VirtualQuantity>", replace: "<rasd:VirtualQuantity>{{nsx_t_sizing.edge.memory}}</rasd:VirtualQuantity>" }
         - { regexp: "32768MB of memory", replace: "{{nsx_t_sizing.edge.memory}} MB of memory" }
