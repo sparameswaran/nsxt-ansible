@@ -73,7 +73,7 @@ def main():
             nsx_username=dict(required=True, type='str'),
             nsx_passwd=dict(required=True, type='str', no_log=True)
         ),
-        supports_check_mode=False
+        supports_check_mode=True
     )
 
     if not HAS_PYNSXT:
@@ -112,6 +112,8 @@ def main():
                 urpf_mode=module.params['urpf_mode'],
                 tags=tags
             )
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(new_lrp), id="1111")
             new_lrp_temp = lrp_svc.create(new_lrp)
             new_lrp = new_lrp_temp.convert_to(LogicalRouterDownLinkPort)
             module.exit_json(changed=True, object_name=module.params['display_name'], id=new_lrp.id, message="Logical Router Port with name %s created!"%(module.params['display_name']))
@@ -124,12 +126,16 @@ def main():
                 changed = True
                 lrp.subnets=subnet_list
             if changed:
+                if module.check_mode:
+                    module.exit_json(changed=True, debug_out=str(lrp), id=lrp.id)
                 new_lrp = lrp_svc.update(lrp.id, lrp)
                 module.exit_json(changed=True, object_name=module.params['display_name'], id=lrp.id, message="Logical Router Port with name %s has changed tags!"%(module.params['display_name']))
             module.exit_json(changed=False, object_name=module.params['display_name'], id=lrp.id, message="Logical Router Port with name %s already exists!"%(module.params['display_name']))
 
     elif module.params['state'] == "absent":
         if lrp:
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(lrp), id=lrp.id)
             lrp_svc.delete(lrp.id)
             module.exit_json(changed=True, object_name=module.params['display_name'], message="Logical Router Port with name %s deleted!"%(module.params['display_name']))
         module.exit_json(changed=False, object_name=module.params['display_name'], message="Logical Router Port with name %s does not exist!"%(module.params['display_name']))

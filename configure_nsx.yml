@@ -10,7 +10,7 @@
         host_switch_name: "{{ hostvars['localhost'].hostswitch }}"
         transport_type: 'OVERLAY'
         tags:
-          ncp/cluster: k8s-cluster1
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'

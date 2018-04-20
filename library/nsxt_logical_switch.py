@@ -73,7 +73,7 @@ def main():
             nsx_username=dict(required=True, type='str'),
             nsx_passwd=dict(required=True, type='str', no_log=True)
         ),
-        supports_check_mode=False
+        supports_check_mode=True
     )
 
     if not HAS_PYNSXT:
@@ -110,6 +110,8 @@ def main():
                 vlan=module.params['vlan'],
                 tags=tags
             )
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(new_ls), id="1111")
             new_ls = ls_svc.create(new_ls)
 #
 #  TODO: Check the realisation before exiting !!!!
@@ -120,6 +122,8 @@ def main():
             if tags != ls.tags:
                 changed = True
                 ls.tags=tags
+                if module.check_mode:
+                    module.exit_json(changed=True, debug_out=str(ls), id=ls.id)
                 new_ls = ls_svc.update(ls.id, ls)
             if changed:
                 module.exit_json(changed=True, object_name=module.params['display_name'], id=new_ls.id, message="Logical Switch with name %s has changed tags!"%(module.params['display_name']))
@@ -127,6 +131,8 @@ def main():
 
     elif module.params['state'] == "absent":
         if ls:
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(ls), id=ls.id)
             ls_svc.delete(ls.id)
             module.exit_json(changed=True, object_name=module.params['display_name'], message="Logical Switch with name %s deleted!"%(module.params['display_name']))
         module.exit_json(changed=False, object_name=module.params['display_name'], message="Logical Switch with name %s does not exist!"%(module.params['display_name']))

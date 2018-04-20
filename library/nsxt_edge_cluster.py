@@ -93,7 +93,7 @@ def main():
             nsx_username=dict(required=True, type='str'),
             nsx_passwd=dict(required=True, type='str', no_log=True)
         ),
-        supports_check_mode=False
+        supports_check_mode=True
     )
 
     if not HAS_PYNSXT:
@@ -132,6 +132,8 @@ def main():
                 members=member_list,
                 tags=tags
             )
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(new_ec), id="1111")
             new_ec = ec_svc.create(new_ec)
             module.exit_json(changed=True, object_name=module.params['display_name'], id=new_ec.id, message="Edge Cluster with name %s created!"%(module.params['display_name']))
         elif ec:
@@ -149,14 +151,23 @@ def main():
                 ec.members=member_list
                 changed = True
             if changed:
+                if module.check_mode:
+                    module.exit_json(changed=True, debug_out=str(ec), id=ec.id)
                 new_ec = ec_svc.update(ec.id, ec)
                 module.exit_json(changed=True, object_name=module.params['display_name'], id=new_ec.id, message="Edge Cluster with name %s has changed tags!"%(module.params['display_name']))
+
             module.exit_json(changed=False, object_name=module.params['display_name'], id=ec.id, message="Edge Cluster with name %s already exists!"%(module.params['display_name']))
 
     elif module.params['state'] == "absent":
         if ec:
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(ec))
+
             ec_svc.delete(ec.id)
             module.exit_json(changed=True, object_name=module.params['display_name'], message="Edge Cluster with name %s deleted!"%(module.params['display_name']))
+        if module.check_mode:
+            module.exit_json(changed=False, debug_out="no Edge Cluster with name %s" % (module.params['display_name']))
+
         module.exit_json(changed=False, object_name=module.params['display_name'], message="Edge Cluster with name %s does not exist!"%(module.params['display_name']))
 
 from ansible.module_utils.basic import *

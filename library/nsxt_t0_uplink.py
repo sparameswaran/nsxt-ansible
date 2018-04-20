@@ -117,7 +117,7 @@ def main():
             nsx_username=dict(required=True, type='str'),
             nsx_passwd=dict(required=True, type='str', no_log=True)
         ),
-        supports_check_mode=False
+        supports_check_mode=True
     )
 
     if not HAS_PYNSXT:
@@ -167,7 +167,8 @@ def main():
                 logical_router_id=lr.id,
                 tags=tags
             )
-
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(new_lrp), id="1111")
             try:
                 lrp_temp = lrp_svc.create(new_lrp)
                 new_lrp = lrp_temp.convert_to(LogicalRouterUpLinkPort)
@@ -190,6 +191,8 @@ def main():
                 changed = True
                 lrp.edge_cluster_member_index=member_index
             if changed:
+                if module.check_mode:
+                    module.exit_json(changed=True, debug_out=str(lrp), id=lrp.id)
                 new_lr = lrp_svc.update(lrp.id, lrp)
                 module.exit_json(changed=True, object_name=module.params['display_name'], id=lrp.id, message="Logical Router Uplink with name %s has been changed!"%(module.params['display_name']))
             module.exit_json(changed=False, object_name=module.params['display_name'], id=lrp.id, message="Logical Router Uplink with name %s already exists!"%(module.params['display_name']))
@@ -197,6 +200,8 @@ def main():
     elif module.params['state'] == "absent":
 
         if lrp:
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(lrp), id=lrp.id)
             try:
                 lrp_svc.delete(lrp.id, force=True)
             except Error as ex:
