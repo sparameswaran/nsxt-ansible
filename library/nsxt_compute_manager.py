@@ -61,6 +61,8 @@ def createComputeManager(module, stub_config):
             thumbprint=module.params['thumbprint']
         )
     )
+    if module.check_mode:
+        module.exit_json(changed=True, debug_out=str(newNode), id="1111")
     try:
         cm_svc.create(newNode)
     except Error as ex:
@@ -147,6 +149,8 @@ def main():
         if cm is None:
             module.exit_json(changed=False, object_name=module.params['display_name'], message="No Compute Manager with name %s"%(module.params['display_name']))
         else:
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(cm), id=cm.id)
             deleteCm(module, cm, stub_config)
             module.exit_json(changed=True, object_name=module.params['display_name'], message="Compute Manager with name %s deleted"%(module.params['display_name']))
 
