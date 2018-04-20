@@ -1,0 +1,6 @@
+---
+- include: configure_nsx.yml
+- include: configure_nsx_routers.yml
+# - include: configure_nsx_vmks.yml
+#   when: configure_vmks
+
