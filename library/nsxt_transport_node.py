@@ -174,7 +174,8 @@ def updateTransportNode(module, stub_config):
         hs_list = createHostSwitchList(module, stub_config)
         node.host_switches=hs_list
         tn_svc = TransportNodes(stub_config)
-
+        if module.check_mode:
+            module.exit_json(changed=True, debug_out=str(node), id=node.id)
         try:
             rs = tn_svc.update(node.id, node)
         except Error as ex:
@@ -250,7 +251,7 @@ def main():
             nsx_username=dict(required=True, type='str'),
             nsx_passwd=dict(required=True, type='str', no_log=True)
         ),
-        supports_check_mode=False
+        supports_check_mode=True
     )
 
     if not HAS_PYNSXT:
@@ -271,6 +272,8 @@ def main():
     if module.params['state'] == "present":
         node = getTransportNodeByName(module, stub_config)
         if node is None:
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out="Transport Node will be created", id="1111")
             result = createTransportNode(module, stub_config)
             module.exit_json(changed=True, object_name=module.params['display_name'], id=result.id, body=str(result))
         else:
@@ -290,6 +293,8 @@ def main():
         if node is None:
             module.exit_json(changed=False, object_name=module.params['display_name'], message="No Transport Node with name %s"%(module.params['display_name']))
         else:
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(node), id=node.id)
             deleteTransportNode(module, node, stub_config)
             module.exit_json(changed=True, object_name=module.params['display_name'], message="Transport Node with name %s deleted"%(module.params['display_name']))
 

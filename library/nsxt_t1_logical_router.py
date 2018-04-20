@@ -118,14 +118,20 @@ def compareLrpT0T1(lr, module, stub_config):
         if t0id != module.params['connected_t0_id']:
             changed = True
             if t1port_id:
+                if module.check_mode:
+                    module.exit_json(changed=True, debug_out="Connection to T0 will be deleted")
                 lrp_svc.delete(t1port_id, force=True)
                 lrp_svc.delete(t0port_id, force=True)
             if module.params['connected_t0_id']:
+                if module.check_mode:
+                    module.exit_json(changed=True, debug_out="T1 will be connected to T0")
                 changed = connectT0(lr, module, stub_config)
     elif not t0id:
         if t0id != module.params['connected_t0_id']:
             changed = True
             if module.params['connected_t0_id']:
+                if module.check_mode:
+                    module.exit_json(changed=True, debug_out="T1 will be connected to T0")
                 changed = connectT0(lr, module, stub_config)
 
     return changed
@@ -146,7 +152,7 @@ def main():
             nsx_username=dict(required=True, type='str'),
             nsx_passwd=dict(required=True, type='str', no_log=True)
         ),
-        supports_check_mode=False
+        supports_check_mode=True
     )
 
     if not HAS_PYNSXT:
@@ -196,6 +202,8 @@ def main():
                 high_availability_mode=module.params['high_availability_mode'],
                 tags=tags
             )
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(new_lr), id="1111")
             try:
                 new_lr = lr_svc.create(new_lr)
                 mylr = getLogicalRouterByName(module, stub_config)
@@ -225,6 +233,8 @@ def main():
                 lr.edge_cluster_id=module.params['edge_cluster_id']
                 changed = True
             if changed:
+                if module.check_mode:
+                    module.exit_json(changed=True, debug_out=str(lr), id=lr.id)
                 new_lr = lr_svc.update(lr.id, lr)
                 module.exit_json(changed=True, object_name=module.params['display_name'], id=new_lr.id, message="Logical Router with name %s has been modified!"%(module.params['display_name']))
             if compareLrpT0T1(lr, module, stub_config):
@@ -277,6 +287,8 @@ def main():
                     changed = True
 
                 if changed:
+                    if module.check_mode:
+                        module.exit_json(changed=True, debug_out=str(adv_config), id=lr.id)
                     adv_svc.update(lr.id, adv_config)
                     module.exit_json(changed=True, object_name=module.params['display_name'], id=lr.id, message="Logical Router advertisement config on T1 with name %s has been modified!"%(module.params['display_name']))
 
@@ -284,6 +296,8 @@ def main():
 
     elif module.params['state'] == "absent":
         if lr:
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(lr), id=lr.id)
             try:
                 deleteAllPortsOnRouter(lr, module, stub_config)
                 lr_svc.delete(lr.id)

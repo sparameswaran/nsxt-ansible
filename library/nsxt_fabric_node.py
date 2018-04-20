@@ -132,7 +132,7 @@ def main():
             nsx_username=dict(required=True, type='str'),
             nsx_passwd=dict(required=True, type='str', no_log=True)
         ),
-        supports_check_mode=False
+        supports_check_mode=True
     )
 
     if not HAS_PYNSXT:
@@ -149,6 +149,9 @@ def main():
     if module.params['state'] == "present":
         node = getNodeByName(module, stub_config)
         if node is None:
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out="Fabric node will be created", id="1111")
+
             result = createNode(module, stub_config)
             module.exit_json(changed=True, id=result.id, object_name=module.params['display_name'], body=str(result))
         else:
@@ -159,6 +162,9 @@ def main():
         if node is None:
             module.exit_json(changed=False, object_name=module.params['display_name'], message="No Node with name %s"%(module.params['display_name']))
         else:
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out="Fabric Node with name %s will be deleted" % (module.params['display_name']))
+
             deleteNode(module, node, stub_config)
             module.exit_json(changed=True, object_name=module.params['display_name'], message="Node with name %s deleted"%(module.params['display_name']))
 
