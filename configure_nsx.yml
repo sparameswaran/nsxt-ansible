@@ -124,9 +124,7 @@
       nsxt_edge_cluster:
         display_name: "{{ hostvars['localhost'].edge_cluster }}"
         description: "Default Edge Cluster"
-        members:
-          - edge1
-          - edge2
+        members: "{{ groups['nsxedges'] }}"
         tags:
           ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
@@ -195,7 +193,7 @@
       nsxt_t0_uplink:
         display_name: "uplink-1"
         description: "My Test T0 Uplink"
-        edge_cluster_member: edge1
+        edge_cluster_member: "{{ groups['nsxedges'][0] }}"
         urpf: 'NONE'
         t0_router: "{{ hostvars['localhost'].t0_name }}"
         logical_switch_port_id: "{{ uplink_lsp.id }}"
@@ -225,7 +223,7 @@
       nsxt_t0_uplink:
         display_name: "uplink-2"
         description: "My Test T0 Uplink"
-        edge_cluster_member: edge2
+        edge_cluster_member: "{{ groups['nsxedges'][1] }}"
         urpf: 'NONE'
         t0_router: "{{ hostvars['localhost'].t0_name }}"
         logical_switch_port_id: "{{ uplink_lsp2.id }}"
@@ -430,9 +428,9 @@
 
     - name: NSX-T IP Block
       nsxt_ip_block:
-        display_name: "test ip block"
-        description: "Test IP Block created by Ansible"
-        cidr: 192.168.15.0/24
+        display_name: "{{ hostvars['localhost'].ip_block_name }}"
+        description: "IP Block created by Ansible"
+        cidr: "{{ hostvars['localhost'].ip_block_cidr }}"
         tags:
           ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present

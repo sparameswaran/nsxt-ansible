@@ -74,7 +74,6 @@ t0_ip2='10.29.12.217/27'
 t0_vip='10.29.12.218/27'
 t0_gw='10.29.12.193'
 
-
 t1_name="MngmtT1Router"
 t1_ip=["192.168.10.1"]
 t1_mask=24
@@ -85,7 +84,8 @@ vlan_ls_vsan="1079"
 
 ls_name="MngmtLS"
 
-
+ip_block_name="k8s-pod-nw-ip-block"
+ip_block_cidr="10.4.0.0/16"
 
 
 
