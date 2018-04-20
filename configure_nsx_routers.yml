@@ -1,7 +1,8 @@
 ---
 - hosts: localhost
   connection: local
-  gather_facts: False
+  gather_facts: True
+  
   tasks:
     - name: NSX-T Overlay Transport Zone
       nsxt_transport_zone:
@@ -17,19 +18,6 @@
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       register: overlay_tzone
 
-    - name: NSX-T Edge Cluster
-      nsxt_edge_cluster:
-        display_name: "{{ hostvars['localhost'].edge_cluster }}"
-        description: "Default Edge Cluster"
-        members: "{{ groups['nsxedges'] }}"
-        tags:
-          ncp/cluster: "{{ hostvars['localhost'].tag }}"
-        state: present
-        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
-        nsx_username: 'admin'
-        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
-      register: edge_cluster
-      
     - name: NSX-T T0 Logical Router
       nsxt_t0_logical_router:
         display_name: "{{ t0_router.name }}"
