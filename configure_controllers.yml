@@ -2,6 +2,8 @@
 - name: Delete old SSH Keys
   hosts: localhost
   connection: local
+  vars_files:
+    - ./answerfile.yml
   gather_facts: False
   tasks:
     - name: Remove previous SSH keys from known_hosts - Managers
