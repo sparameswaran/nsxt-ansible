@@ -19,7 +19,9 @@
 
 __author__ = 'yasensim'
 
-
+import ssl
+import socket
+import hashlib
 import requests, time
 try:
     from com.vmware.nsx.fabric_client import ComputeManagers
@@ -39,6 +41,29 @@ try:
 except ImportError:
     HAS_PYNSXT = False
 
+def get_thumb(module):
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(1)
+    wrappedSocket = ssl.wrap_socket(sock)
+
+    try:
+        wrappedSocket.connect((module.params['server'], 443))
+    except:
+        response = False
+    else:
+        der_cert_bin = wrappedSocket.getpeercert(True)
+        pem_cert = ssl.DER_cert_to_PEM_cert(wrappedSocket.getpeercert(True))
+    thumb_md5 = hashlib.md5(der_cert_bin).hexdigest()
+    thumb_sha1 = hashlib.sha1(der_cert_bin).hexdigest()
+    thumb_sha256 = hashlib.sha256(der_cert_bin).hexdigest()
+#    print("MD5: " + thumb_md5)
+#    print("SHA1: " + thumb_sha1)
+#    print("SHA256: " + thumb_sha256.upper())
+    sha = thumb_sha256.upper()
+    sha = ":".join(sha[i:i+2] for i in range(0, len(sha), 2))
+#    print(sha)
+    wrappedSocket.close()
+    return sha
 
 def listComputeManagers(module, stub_config):
     try:
@@ -51,6 +76,8 @@ def listComputeManagers(module, stub_config):
 
 def createComputeManager(module, stub_config):
     cm_svc = ComputeManagers(stub_config)
+    if module.params['thumbprint'] == 'x':
+        module.params['thumbprint'] = get_thumb(module)
     newNode = ComputeManager(
 	display_name=module.params['display_name'],
 	server=module.params['server'],
@@ -114,14 +141,14 @@ def main():
             server=dict(required=True, type='str'),
             username=dict(required=False, type='str'),
             passwd=dict(required=False, type='str', no_log=True),
-            thumbprint=dict(required=False, type='str', no_log=True),
+            thumbprint=dict(required=False, type='str', default="x", no_log=True),
             origin_type=dict(required=False, type='str', default ='vCenter', choices=['vCenter']),
             state=dict(required=False, type='str', default="present", choices=['present', 'absent']),
             nsx_manager=dict(required=True, type='str'),
             nsx_username=dict(required=True, type='str'),
             nsx_passwd=dict(required=True, type='str', no_log=True)
         ),
-        supports_check_mode=False
+        supports_check_mode=True
     )
 
     if not HAS_PYNSXT:

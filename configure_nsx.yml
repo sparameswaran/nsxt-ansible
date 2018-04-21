@@ -61,6 +61,19 @@
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       register: ippool
 
+    - name: NSX-T IP Block
+      nsxt_ip_block:
+        display_name: "{{ hostvars['localhost'].ip_block_name }}"
+        description: "IP Block created by Ansible"
+        cidr: "{{ hostvars['localhost'].ip_block_cidr }}"
+        tags:
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      register: ipblock
+
     - name: NSX-T Edge Uplink Profile
       nsxt_uplink_profile:
         display_name: "{{ hostvars['localhost'].edge_uplink_profile_name }}"
@@ -352,14 +365,16 @@
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       register: lrdp
 
-    - name: Remove previous SSH keys from known_hosts - NSX nodes
+    - name: Remove previous SSH keys from known_hosts - ESXi hosts
       command: ssh-keygen -R "{{ hostvars[item]['ansible_ssh_host'] }}"
       register: command_result
       failed_when: "command_result.rc > 0 and command_result.rc != 255"
       with_items: "{{ groups['nsxtransportnodes'] }}"
-    - name: add host to known_hosts - Managers
+      when: groups['nsxtransportnodes'] is defined
+    - name: add host to known_hosts - ESXi hosts
       shell: mkdir -p ~/.ssh; ssh-keyscan -H "{{ hostvars[item]['ansible_ssh_host'] }}" >> ~/.ssh/known_hosts
       with_items: "{{ groups['nsxtransportnodes'] }}"
+      when: groups['nsxtransportnodes'] is defined
 
 - name: Get ESX nodes information
   hosts: nsxtransportnodes
@@ -394,6 +409,7 @@
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       with_items: "{{ groups['nsxtransportnodes'] }}"
+      when: groups['nsxtransportnodes'] is defined
       register: fnode
       async: 7200
       poll: 0
@@ -403,7 +419,8 @@
       register: job_result
       until: job_result.finished
       with_items: "{{ fnode.results }}"
-      retries: 30
+      when: groups['nsxtransportnodes'] is defined
+      retries: 40
 
     - name: NSX-T Transport Node
       nsxt_transport_node:
@@ -424,18 +441,43 @@
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       with_items: "{{ groups['nsxtransportnodes'] }}"
+      when: groups['nsxtransportnodes'] is defined
       register: tnode
 
-    - name: NSX-T IP Block
-      nsxt_ip_block:
-        display_name: "{{ hostvars['localhost'].ip_block_name }}"
-        description: "IP Block created by Ansible"
-        cidr: "{{ hostvars['localhost'].ip_block_cidr }}"
-        tags:
-          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+    - name: NSX-T Compute Manager
+      nsxt_compute_manager:
+        display_name: "{{ hostvars['localhost'].compute_manager }}"
+        server: "{{ hostvars['localhost'].deployVcIPAddress }}"
+        username: "{{ hostvars['localhost'].deployVcUser }}"
+        passwd: "{{ hostvars['localhost'].deployVcPassword }}"
+        origin_type: "vCenter"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
-      register: ipblock
+      when: hostvars['localhost'].compute_manager is defined
+      register: cmp_manager
+
+    - name: NSX-T Compute Manager Cluster
+      nsxt_cm_cluster:
+        display_name: "{{ hostvars['localhost'].cm_cluster }}"
+        cm_name: "{{ hostvars['localhost'].compute_manager }}"
+        auto_install_nsx: True
+        create_transport_node: True
+        transport_zone_endpoints: 
+          - "{{ hostvars['localhost'].overlay_tz_name }}"
+        host_switch:
+          - name: "{{ hostvars['localhost'].hostswitch }}"
+            static_ip_pool_id: "{{ ippool.id }}"
+            pnics:
+              uplink-1: "{{ hostvars['localhost']['uplink-1'] }}"
+              uplink-2: "{{ hostvars['localhost']['uplink-2'] }}"
+            uplink_profile: "{{ hostvars['localhost'].esxi_uplink_profile_name }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: groups['nsxtransportnodes'] is not defined
+      register: cmcluster
+
 

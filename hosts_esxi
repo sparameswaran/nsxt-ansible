@@ -13,6 +13,14 @@ nsx-controller03 ansible_ssh_host=10.29.12.206 ansible_ssh_user=root ansible_ssh
 edge1 ansible_ssh_host=10.29.12.207 ansible_ssh_user=root ansible_ssh_pass=VMware1! dc=MyDC1 cluster=Management datastore=Datastore-10 portgroup=Infrastructure gw=10.29.12.193 mask=255.255.255.224 hostname=edge1 portgroupExt=AllVlansVSS portgroupTransport=AllVlansVSS
 edge2 ansible_ssh_host=10.29.12.208 ansible_ssh_user=root ansible_ssh_pass=VMware1! dc=MyDC1 cluster=Management datastore=Datastore-10 portgroup=Infrastructure gw=10.29.12.193 mask=255.255.255.224 hostname=edge2 portgroupExt=AllVlansVSS portgroupTransport=AllVlansVSS
 
+[nsxtransportnodes]
+esx1 ansible_ssh_host=10.29.12.197 ansible_ssh_user=root ansible_ssh_pass=VMware1! uplink-1=vmnic3 uplink-2=vmnic4
+esx2 ansible_ssh_host=10.29.12.198 ansible_ssh_user=root ansible_ssh_pass=VMware1! uplink-1=vmnic3 uplink-2=vmnic4
+esx3 ansible_ssh_host=10.29.12.199 ansible_ssh_user=root ansible_ssh_pass=VMware1! uplink-1=vmnic3 uplink-2=vmnic4
+esx4 ansible_ssh_host=10.29.12.200 ansible_ssh_user=root ansible_ssh_pass=VMware1! uplink-1=vmnic3 uplink-2=vmnic4
+
+
+
 [localhost:vars]
 ovfToolPath='/usr/bin'
 nsxOvaPath='/root/ISOs'
@@ -25,10 +33,6 @@ edgeOva='nsx-edge-2.1.0.0.0.7328372.ova'
 deployVcIPAddress='10.29.12.202'
 deployVcUser='administrator@yasen.local'
 deployVcPassword='VMware1!'
-compute_manager='vCenter1'
-cm_cluster='Compute'
-uplink-1=vmnic3
-uplink-2=vmnic4
 
 dns_server="10.29.12.201"
 dns_domain="yasen.local"

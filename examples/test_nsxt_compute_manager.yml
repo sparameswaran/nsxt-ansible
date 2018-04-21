@@ -9,7 +9,6 @@
         server: "10.29.12.202"
         username: "administrator@yasen.local"
         passwd: 'VMware1!'
-        thumbprint: "37:91:8D:8F:52:41:7C:F5:89:E6:C8:33:4C:DC:96:F1:D5:4C:3C:DF:F3:37:8D:A4:3A:EF:6F:DD:5E:BB:DD:A3"
         origin_type: "vCenter"
         state: present
         nsx_manager: "10.29.12.203"
