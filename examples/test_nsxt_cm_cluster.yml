@@ -1,0 +1,26 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: NSX-T Compute Manager Cluster
+      nsxt_cm_cluster:
+        display_name: "test_cluster"
+        cm_name: "vCenter1"
+        auto_install_nsx: True
+        create_transport_node: True
+        transport_zone_endpoints: 
+          - "tz1"
+        host_switch:
+          - name: "nvds1"
+            static_ip_pool_id: "bdb61dbc-f989-4fce-917b-de0a3a8a6c78"
+            pnics:
+              uplink-1: "vmnic3"
+              uplink-2: "vmnic4"
+            uplink_profile: "esxi-uplink-profile"
+        state: present
+        nsx_manager: "10.29.12.203"
+        nsx_username: 'admin'
+        nsx_passwd: "VMware1!"
+      register: cmcluster
+
