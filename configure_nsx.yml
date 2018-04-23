@@ -15,6 +15,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].overlay_tz_name is defined
       register: overlay_tzone
 
     - name: NSX-T VLAN Transport Zone
@@ -27,6 +28,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].vlan_tz_name is defined
       register: vlan_tzone
 
     - name: NSX-T VLAN Transport Zone for Edge Uplink
@@ -39,6 +41,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].edge_vlan_tz_name is defined
       register: edge_vlan_tzone
 
     - name: NSX-T IP Pool
@@ -59,6 +62,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].tep_pool_name is defined
       register: ippool
 
     - name: NSX-T IP Block
@@ -72,6 +76,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].ip_block_name is defined
       register: ipblock
 
     - name: NSX-T Edge Uplink Profile
@@ -89,6 +94,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].edge_uplink_profile_name is defined
       register: edge_uplink_prof
 
     - name: NSX-T Host Uplink Profile
@@ -107,6 +113,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].esxi_uplink_profile_name is defined
       register: edge_uplink_prof
 
     - name: NSX-T Edge Transport Node
@@ -131,6 +138,7 @@
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       with_items: "{{ groups['nsxedges'] }}"
+      when: groups['nsxedges'] is defined
       register: edgetnode
 
     - name: NSX-T Edge Cluster
@@ -144,6 +152,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].edge_cluster is defined
       register: edge_cluster
 
 
@@ -159,6 +168,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].t0_name is defined
       register: t0
 
     - name: NSX-T T1 Logical Router
@@ -173,6 +183,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].t1_name is defined
       register: t1
 
     - name: NSX-T VLAN Logical Switch for t0 uplink
@@ -187,6 +198,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].t0_vlan_uplink is defined
       register: uplink_ls
 
     - name: NSX-T Logical Switch Port for uplink1
@@ -200,6 +212,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].t0_vlan_uplink is defined
       register: uplink_lsp
 
     - name: NSX-T T0 Uplink 1
@@ -217,6 +230,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].t0_vlan_uplink is defined
       register: t0uplink1
 
     - name: NSX-T Logical Switch Port for uplink2
@@ -230,6 +244,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].t0_vlan_uplink is defined
       register: uplink_lsp2
 
     - name: NSX-T T0 Uplink 2
@@ -247,6 +262,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].t0_vlan_uplink is defined
       register: t0uplink2
 
     - name: NSX-T T0 HA VIP
@@ -261,6 +277,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].t0_vlan_uplink is defined
       register: havip
 
     - name: NSX-T T0 Default Static route
@@ -292,6 +309,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].vlan_ls_mgmt is defined
       register: ls1
 
     - name: NSX-T VLAN Logical Switch 2
@@ -306,6 +324,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].vlan_ls_vmotion is defined
       register: ls2
 
     - name: NSX-T VLAN Logical Switch 3
@@ -320,6 +339,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].vlan_ls_vsan is defined
       register: ls3
 
     - name: NSX-T Logical Switch
@@ -333,6 +353,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].ls_name is defined
       register: lsswitch
 
     - name: NSX-T Logical Switch Port
@@ -346,6 +367,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].ls_name is defined
       register: lsp
 
     - name: NSX-T Logical Router Downlink Port
@@ -363,6 +385,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].t1_ip is defined
       register: lrdp
 
     - name: Remove previous SSH keys from known_hosts - ESXi hosts
