@@ -173,7 +173,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
-      when: hostvars['localhost'].t0_name is defined
+      when: t0_router.name is defined
       register: t0
 
     - name: NSX-T VLAN Logical Switch for t0 uplink
