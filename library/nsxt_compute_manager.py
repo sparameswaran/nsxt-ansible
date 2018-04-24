@@ -105,7 +105,7 @@ def createComputeManager(module, stub_config):
         elif cm_status.connection_status == "UP":
             return resultCm
         else:
-            module.fail_json(msg='Error in Compute Manager status: %s'%(str(fn_status)))
+            module.fail_json(msg='Error in Compute Manager status: %s'%(str(cm_status)))
 
 
 def deleteCm(module, cm, stub_config):
