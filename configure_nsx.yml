@@ -18,7 +18,7 @@
       when: hostvars['localhost'].overlay_tz_name is defined
       register: overlay_tzone
 
-    - name: NSX-T VLAN Transport Zone for Edge Uplink
+    - name: NSX-T VLAN Transport Zone
       nsxt_transport_zone:
         display_name: "{{ hostvars['localhost'].vlan_tz_name }}"
         description: "Ansible created TZ for VLAN Traffic"
@@ -30,6 +30,19 @@
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       when: hostvars['localhost'].vlan_tz_name is defined
       register: vlan_tzone
+
+    # - name: NSX-T VLAN Transport Zone for Edge Uplink
+    #   nsxt_transport_zone:
+    #     display_name: "{{ hostvars['localhost'].edge_vlan_tz_name }}"
+    #     description: "Ansible created TZ for VLAN Traffic"
+    #     host_switch_name: "{{ hostvars['localhost'].vlan_hostswitch }}"
+    #     transport_type: 'VLAN'
+    #     state: present
+    #     nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+    #     nsx_username: 'admin'
+    #     nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+    #   when: hostvars['localhost'].vlan_tz_name is defined
+    #   register: edge_vlan_tzone
 
     - name: NSX-T TEP IP Pool
       nsxt_ip_pool:
@@ -331,7 +344,7 @@
       when: groups['nsxtransportnodes'] is defined
       retries: 40
 
-    - name: NSX-T Transport Node
+    - name: NSX-T Esxi Transport Node
       nsxt_transport_node:
         display_name: "{{ item }}"
         node_name: "{{ item }}"
@@ -344,7 +357,8 @@
         # uplink_profile: "{{ hostvars['localhost'].esxi_overlay_profile_name }}"
         transport_zone_endpoints: 
           - "{{ hostvars['localhost'].overlay_tz_name }}"
-          - "{{ hostvars['localhost'].vlan_tz_name }}"
+          # Commenting off the vlan transport as its not required for esxi - check
+          #- "{{ hostvars['localhost'].vlan_tz_name }}"
         host_switch:
           - name: "{{ hostvars['localhost'].overlay_hostswitch }}"
             static_ip_pool_id: "{{ tepippool.id }}"
