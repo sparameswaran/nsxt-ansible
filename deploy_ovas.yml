@@ -103,20 +103,20 @@
       register: job_result
       until: job_result.finished
       with_items: "{{ deploy_nsx_man.results }}"
-      retries: 30
+      retries: 100
     - name: Check if NSX Controllers deployment has finished
       async_status:
         jid: "{{ item.ansible_job_id }}"
       register: job_result
       until: job_result.finished
       with_items: "{{ deploy_nsx_ctrl.results }}"
-      retries: 30
+      retries: 100
     - name: Check if NSX Edges deployment has finished
       async_status:
         jid: "{{ item.ansible_job_id }}"
       register: job_result
       until: job_result.finished
       with_items: "{{ deploy_nsx_edges.results }}"
-      retries: 30
+      retries: 100
 
 
