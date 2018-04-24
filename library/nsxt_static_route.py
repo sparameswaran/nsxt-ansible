@@ -99,7 +99,7 @@ def main():
             nsx_username=dict(required=True, type='str'),
             nsx_passwd=dict(required=True, type='str', no_log=True)
         ),
-        supports_check_mode=False
+        supports_check_mode=True
     )
 
     if not HAS_PYNSXT:
@@ -145,6 +145,9 @@ def main():
                 description=module.params['description'],
                 tags=tags
             )
+
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(new_static_route), id="1111")
             try:
                 new_static_route = sr_svc.create(lrid, new_static_route)
                 module.exit_json(changed=True, object_name=module.params['network'], id=new_static_route.id, 
@@ -162,6 +165,8 @@ def main():
                 sroute.next_hops=next_hop_list
                 changed = True
             if changed:
+                if module.check_mode:
+                    module.exit_json(changed=True, debug_out=str(sroute), id=lrid)
                 new_static_route = sr_svc.update(lrid, sroute.id, sroute)
                 module.exit_json(changed=True, object_name=module.params['network'], id=new_static_route.id, 
                                  message="Static Route for %s has changed tags!"%(module.params['network']))
@@ -170,6 +175,8 @@ def main():
 
     elif module.params['state'] == "absent":
         if sroute:
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(sroute), id=lrid)
             try:
                 sr_svc.delete(lrid, sroute.id)
                 module.exit_json(changed=True, object_name=module.params['network'], message="Static Route for %s deleted!"%(module.params['network']))

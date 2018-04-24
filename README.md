@@ -1,12 +1,13 @@
 # nsxt-ansible
 Repository for NSX-T Ansible Modules
-
 Forked from github.com/yasensim/nsxt-ansible
 
 It is for Internal PoC. This is not VMware suppoted and might disappear at some point of time.
 Use at your own risk!
 
-Forked from github.com/yasensim/nsxt-ansible
+It is for Internal PoC and is not VMware suppoted!!!
+There might be changed in the master branch!
+
 
 ## Getting started
 

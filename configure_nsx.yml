@@ -15,9 +15,10 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].overlay_tz_name is defined
       register: overlay_tzone
 
-    - name: NSX-T VLAN Transport Zone
+    - name: NSX-T VLAN Transport Zone for Edge Uplink
       nsxt_transport_zone:
         display_name: "{{ hostvars['localhost'].vlan_tz_name }}"
         description: "Ansible created TZ for VLAN Traffic"
@@ -27,6 +28,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].vlan_tz_name is defined
       register: vlan_tzone
 
     - name: NSX-T TEP IP Pool
@@ -47,7 +49,22 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].tep_pool_name is defined
       register: tepippool
+
+    - name: NSX-T IP Block
+      nsxt_ip_block:
+        display_name: "{{ hostvars['localhost'].ip_block_name }}"
+        description: "IP Block created by Ansible"
+        cidr: "{{ hostvars['localhost'].ip_block_cidr }}"
+        tags:
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].ip_block_name is defined
+      register: ipblock
 
     - name: Single Uplink Profile
       nsxt_uplink_profile:
@@ -65,6 +82,7 @@
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       register: single_uplink_prof
+      when: hostvars['localhost'].edge_single_uplink_profile_name is defined
 
     - name: Host Overlay Profile
       nsxt_uplink_profile:
@@ -73,7 +91,8 @@
         mtu: "{{ hostvars['localhost'].esxi_overlay_profile_mtu }}"
         active_list:
           - uplink-1
-        policy: "FAILOVER_ORDER"
+          - uplink-2
+        policy: "LOADBALANCE_SRCID"
         transport_vlan: "{{ hostvars['localhost'].esxi_overlay_profile_vlan }}"
         tags:
           ncp/cluster: "{{ hostvars['localhost'].tag }}"
@@ -81,26 +100,38 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].esxi_overlay_profile_name is defined
       register: host_overlay_prof
 
     - name: NSX-T Edge Transport Node
       nsxt_transport_node:
         display_name: "{{ item }}"
         node_name: "{{ item }}"
-        static_ip_pool_id: "{{ tepippool.id }}"
-        host_switch_name:
-          - "{{ hostvars['localhost'].overlay_hostswitch }}"
-          - "{{ hostvars['localhost'].vlan_hostswitch }}"
+        # static_ip_pool_id: "{{ tepippool.id }}"
+        # host_switch_name:
+        #   - "{{ hostvars['localhost'].overlay_hostswitch }}"
+        #   - "{{ hostvars['localhost'].vlan_hostswitch }}"
+        # pnics: "{{ edge_uplink_vmnics }}"
+        # uplink_profile: "{{ hostvars['localhost'].edge_single_uplink_profile_name }}"
         transport_zone_endpoints:
           - "{{ hostvars['localhost'].overlay_tz_name }}"
           - "{{ hostvars['localhost'].vlan_tz_name }}"
-        pnics: "{{ edge_uplink_vmnics }}"
-        uplink_profile: "{{ hostvars['localhost'].edge_single_uplink_profile_name }}"
+        host_switch:
+          - name: "{{ hostvars['localhost'].overlay_hostswitch }}"
+            pnics:
+              uplink-1: "{{ hostvars['localhost'].edge_interface }}"
+            uplink_profile: "{{ hostvars['localhost'].edge_single_uplink_profile_name }}"
+            static_ip_pool_id: "{{ tepippool.id }}"
+          - name: "{{ hostvars['localhost'].vlan_hostswitch }}"
+            pnics:
+              uplink-1: "{{ hostvars['localhost'].edge_uplink_interface }}"
+            uplink_profile: "{{ hostvars['localhost'].edge_single_uplink_profile_name }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       with_items: "{{ groups['nsxedges'] }}"
+      when: groups['nsxedges'] is defined
       register: edgetnode
 
     - name: NSX-T Edge Cluster
@@ -114,6 +145,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].edge_cluster is defined
       register: edge_cluster
 
     - name: NSX-T T0 Logical Router
@@ -128,51 +160,105 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].t0_name is defined
       register: t0
 
-    - name: NSX-T VLAN Uplink Switch
+    - name: NSX-T VLAN Logical Switch for t0 uplink
       nsxt_logical_switch:
-        display_name: "vlan-uplink-switch"
-        description: "VLAN Uplink Switch"
+        display_name: "uplink-{{ t0_router.vlan_uplink }}"
+        description: "T0 Uplink VLAN Logical Switch"
         transport_zone_id: "{{ vlan_tzone.id }}"
+        vlan: "{{ t0_router.vlan_uplink }}"
         tags:
           ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
-        vlan: 0
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
-      register: vlanupls
+      when: t0_router.vlan_uplink is defined
+      register: uplink_ls
 
-    - name: NSX-T VLAN Uplink Logical Switch Port
+    - name: NSX-T Logical Switch Port for uplink1
       nsxt_logical_switch_port:
-        display_name: "vlan-uplink-switch-port"
-        description: "VLAN Logical Switch Port"
-        logical_switch_id: "{{ vlanupls.id }}"
-        state: present
-        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
-        nsx_username: 'admin'
-        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
-      register: vlanuplsp
-
-    - name: NSX-T T0 Uplink
-      nsxt_t0_uplink:
-        display_name: "{{t0_router.name}}-t0-uplink"
-        description: "{{t0_router.name}} T0 Uplink"
-        edge_cluster_member: "{{t0_router.edge_name}}"
-        urpf: 'NONE'
-        t0_router: "{{t0_router.name}}"
-        logical_switch_port_id: "{{vlanuplsp.id}}"
-        ip_address: "{{t0_router.subnet}}"
+        display_name: "to_{{ t0_router.name}}_uplink1"
+        description: "Logical Switch Port"
+        logical_switch_id: "{{ uplink_ls.id }}"
         tags:
           ncp/cluster: "{{ hostvars['localhost'].tag }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
-        nsx_username: "admin"
+        nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
-      register: t0uplink
+      when: t0_router.vlan_uplink is defined
+      register: uplink_lsp
 
-    - name: NSX-T T0 Static route
+    - name: NSX-T T0 Uplink 1
+      nsxt_t0_uplink:
+        display_name: "uplink-{{ t0_router.name}}-1"
+        description: "{{ t0_router.name}} T0 Uplink"
+        edge_cluster_member: "{{ groups['nsxedges'][0] }}"
+        urpf: 'NONE'
+        t0_router: "{{ t0_router.name}}"
+        logical_switch_port_id: "{{ uplink_lsp.id }}"
+        ip_address: "{{ t0_router.ip1}}"
+        tags:
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: t0_router.vlan_uplink is defined
+      register: t0uplink1
+
+    - name: NSX-T Logical Switch Port for uplink2
+      nsxt_logical_switch_port:
+        display_name: "to_{{ t0_router.name}}_uplink2"
+        description: "Logical Switch Port"
+        logical_switch_id: "{{ uplink_ls.id }}"
+        tags:
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: t0_router.vlan_uplink is defined
+      register: uplink_lsp2
+
+    - name: NSX-T T0 Uplink 2
+      nsxt_t0_uplink:
+        display_name: "uplink-{{ t0_router.name}}-2"
+        description: "{{ t0_router.name}} T0 Uplink"
+        edge_cluster_member: "{{ groups['nsxedges'][1] }}"
+        urpf: 'NONE'
+        t0_router: "{{ t0_router.name}}"
+        logical_switch_port_id: "{{ uplink_lsp2.id }}"
+        ip_address: "{{ t0_router.ip2}}"
+        tags:
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: t0_router.vlan_uplink is defined
+      register: t0uplink2
+
+    - name: NSX-T T0 HA VIP
+      nsxt_t0_ha_vip:
+        vip_address: "{{ t0_router.vip}}"
+        enabled: True
+        t0_router: "{{ t0_router.name }}"
+        redundant_uplink_port_ids:
+          - "{{ t0uplink1.id }}"
+          - "{{ t0uplink2.id }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: t0_router.vlan_uplink is defined
+      register: havip
+
+
+    - name: NSX-T T0 Default Static route
       nsxt_static_route:
         description: "NSX-T {{ t0_router.name}} Static route"
         network: "{{t0_router.static_route.network}}"
@@ -186,7 +272,18 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: "admin"
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
-      register: t0_static_route
+      register: stroute
+
+    - name: Remove previous SSH keys from known_hosts - ESXi hosts
+      command: ssh-keygen -R "{{ hostvars[item]['ansible_ssh_host'] }}"
+      register: command_result
+      failed_when: "command_result.rc > 0 and command_result.rc != 255"
+      with_items: "{{ groups['nsxtransportnodes'] }}"
+      when: groups['nsxtransportnodes'] is defined
+    - name: add host to known_hosts - ESXi hosts
+      shell: mkdir -p ~/.ssh; ssh-keyscan -H "{{ hostvars[item]['ansible_ssh_host'] }}" >> ~/.ssh/known_hosts
+      with_items: "{{ groups['nsxtransportnodes'] }}"
+      when: groups['nsxtransportnodes'] is defined
 
 - name: Get ESX nodes information
   hosts: nsxtransportnodes
@@ -221,6 +318,7 @@
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       with_items: "{{ groups['nsxtransportnodes'] }}"
+      when: groups['nsxtransportnodes'] is defined
       register: fnode
       async: 7200
       poll: 0
@@ -230,22 +328,73 @@
       register: job_result
       until: job_result.finished
       with_items: "{{ fnode.results }}"
-      retries: 50
+      when: groups['nsxtransportnodes'] is defined
+      retries: 40
 
     - name: NSX-T Transport Node
       nsxt_transport_node:
         display_name: "{{ item }}"
         node_name: "{{ item }}"
-        static_ip_pool_id: "{{ tepippool.id }}"
-        host_switch_name:
-          - "{{ hostvars['localhost'].overlay_hostswitch }}"
-        transport_zone_endpoints:
+        # static_ip_pool_id: "{{ tepippool.id }}"
+        # host_switch_name:
+        #   - "{{ hostvars['localhost'].overlay_hostswitch }}"
+        # transport_zone_endpoints:
+        #   - "{{ hostvars['localhost'].overlay_tz_name }}"
+        # pnics: "{{ esxi_uplink_vmnics }}"
+        # uplink_profile: "{{ hostvars['localhost'].esxi_overlay_profile_name }}"
+        transport_zone_endpoints: 
           - "{{ hostvars['localhost'].overlay_tz_name }}"
-        pnics: "{{ esxi_uplink_vmnics }}"
-        uplink_profile: "{{ hostvars['localhost'].esxi_overlay_profile_name }}"
+          - "{{ hostvars['localhost'].vlan_tz_name }}"
+        host_switch:
+          - name: "{{ hostvars['localhost'].overlay_hostswitch }}"
+            static_ip_pool_id: "{{ tepippool.id }}"
+            # pnics:
+            #   uplink-1: "hostvars[item]['uplink-1']"
+            #   uplink-2: "hostvars[item]['uplink-2']"
+            pnics: "{{ esxi_uplink_vmnics }}"
+            uplink_profile: "{{ hostvars['localhost'].esxi_overlay_profile_name }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       with_items: "{{ groups['nsxtransportnodes'] }}"
+      when: groups['nsxtransportnodes'] is defined
       register: tnode
+
+
+    - name: NSX-T Compute Manager
+      nsxt_compute_manager:
+        display_name: "{{ hostvars['localhost'].compute_manager }}"
+        server: "{{ hostvars['localhost'].deployVcIPAddress }}"
+        username: "{{ hostvars['localhost'].deployVcUser }}"
+        passwd: "{{ hostvars['localhost'].deployVcPassword }}"
+        origin_type: "vCenter"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].compute_manager is defined
+      register: cmp_manager
+
+    - name: NSX-T Compute Manager Cluster
+      nsxt_cm_cluster:
+        display_name: "{{ hostvars['localhost'].cm_cluster }}"
+        cm_name: "{{ hostvars['localhost'].compute_manager }}"
+        auto_install_nsx: True
+        create_transport_node: True
+        transport_zone_endpoints: 
+          - "{{ hostvars['localhost'].overlay_tz_name }}"
+        host_switch:
+          - name: "{{ hostvars['localhost'].hostswitch }}"
+            static_ip_pool_id: "{{ ippool.id }}"
+            pnics:
+              uplink-1: "{{ hostvars['localhost']['uplink-1'] }}"
+              uplink-2: "{{ hostvars['localhost']['uplink-2'] }}"
+            uplink_profile: "{{ hostvars['localhost'].esxi_uplink_profile_name }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: groups['nsxtransportnodes'] is not defined
+      register: cmcluster
+

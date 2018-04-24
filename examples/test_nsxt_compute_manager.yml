@@ -1,0 +1,18 @@
+---
+- hosts: localhost
+  connection: local
+  gather_facts: False
+  tasks:
+    - name: NSX-T Compute Manager
+      nsxt_compute_manager:
+        display_name: "vCenter1"
+        server: "10.29.12.202"
+        username: "administrator@yasen.local"
+        passwd: 'VMware1!'
+        origin_type: "vCenter"
+        state: present
+        nsx_manager: "10.29.12.203"
+        nsx_username: "admin"
+        nsx_passwd: 'VMware1!'
+      register: cmp_manager
+  tags: cmo_manager

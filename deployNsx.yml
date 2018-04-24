@@ -1,6 +1,4 @@
 ---
 - include: deploy_ovas.yml
 - include: configure_controllers.yml
-#- include: configure_nsx.yml
-
-
+- include: configure_nsx.yml

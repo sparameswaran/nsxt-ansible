@@ -7,20 +7,20 @@
   gather_facts: False
   tasks:
     - name: Remove previous SSH keys from known_hosts - Managers
-      command: 'ssh-keygen -R "{{ item.value.ipAddress }}"'
+      command: 'ssh-keygen -R "{{ hostvars[item].ansible_ssh_host }}"'
       register: command_result
       failed_when: "command_result.rc > 0 and command_result.rc != 255"
-      with_dict: "{{ managers }}"
+      with_items: "{{ groups['nsxmanagers'] }}"
     - name: Remove previous SSH keys from known_hosts - Controllers
-      command: 'ssh-keygen -R "{{ item.value.ipAddress }}"'
+      command: 'ssh-keygen -R "{{ hostvars[item].ansible_ssh_host }}"'
       register: command_result
       failed_when: "command_result.rc > 0 and command_result.rc != 255"
-      with_dict: "{{ controllers }}"
+      with_items: "{{ groups['nsxcontrollers'] }}"
     - name: Remove previous SSH keys from known_hosts - Edges
-      command: 'ssh-keygen -R "{{ item.value.ipAddress }}"'
+      command: 'ssh-keygen -R "{{ hostvars[item].ansible_ssh_host }}"'
       register: command_result
       failed_when: "command_result.rc > 0 and command_result.rc != 255"
-      with_dict: "{{ edges }}"
+      with_items: "{{ groups['nsxedges'] }}"
   tags: clean_old_keys
 - name: Wait for all VMs to be reachable
   hosts:
@@ -36,69 +36,59 @@
   hosts: localhost
   connection: local
   gather_facts: False
-  vars_files:
-    - ./answerfile.yml
   tasks:
     - name: add host to known_hosts - Managers
-      shell: 'mkdir -p ~/.ssh; ssh-keyscan -H "{{ item.value.ipAddress }}" >> ~/.ssh/known_hosts'
-      with_dict: "{{ managers }}"
+      shell: 'mkdir -p ~/.ssh; ssh-keyscan -H "{{ hostvars[item].ansible_ssh_host }}" >> ~/.ssh/known_hosts'
+      with_items: "{{ groups['nsxmanagers'] }}"
     - name: add host to known_hosts - Controllers
-      shell: 'mkdir -p ~/.ssh; ssh-keyscan -H "{{ item.value.ipAddress }}" >> ~/.ssh/known_hosts'
-      with_dict: "{{ controllers }}"
+      shell: 'mkdir -p ~/.ssh; ssh-keyscan -H "{{ hostvars[item].ansible_ssh_host }}" >> ~/.ssh/known_hosts'
+      with_items: "{{ groups['nsxcontrollers'] }}"
     - name: add host to known_hosts - Edges
-      shell: 'mkdir -p ~/.ssh; ssh-keyscan -H "{{ item.value.ipAddress }}" >> ~/.ssh/known_hosts'
-      with_dict: "{{ edges }}"
+      shell: 'mkdir -p ~/.ssh; ssh-keyscan -H "{{ hostvars[item].ansible_ssh_host }}" >> ~/.ssh/known_hosts'
+      with_items: "{{ groups['nsxedges'] }}"
   tags: populate_known_hosts
 - name: Retrieve NSX Man thumbprint
   serial: 1
   hosts: nsx-manager
   gather_facts: False
-  vars_files:
-    - ./answerfile.yml
   tasks:
     - name: Retrieve thumbprint
       command: >
         /opt/vmware/nsx-cli/bin/scripts/nsxcli 
         -c get certificate api thumbprint
       register: thumbprint
-    - name: Wait 5 minutes before start adding Edges and Controllers
-      pause: minutes=5
   tags: nsxman_thumb
 
 - name: Join controllers and gateways to NSX-Manager
   hosts: nsxcontrollers:nsxedges
   gather_facts: False
-  vars_files:
-    - ./answerfile.yml
   tasks:
     - name: Join controllers and gateways to Manager
       command: >
         /opt/vmware/nsx-cli/bin/scripts/nsxcli 
-        -c join management-plane "{{ managers.nsxmanager.ipAddress }}"
+        -c join management-plane "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         username admin
         thumbprint "{{ hostvars['nsx-manager']['thumbprint']['stdout'] }}"
-        password "{{ nsxAdminPass }}"
+        password "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       ignore_errors: yes
   tags: nsxmanager_join
 
 - name: Prepare first Controller
   hosts: nsx-controller01
   gather_facts: False
-  vars_files:
-    - ./answerfile.yml
   tasks:
     - name: Set security-model on first controller
       command: >
         /opt/vmware/nsx-cli/bin/scripts/nsxcli -c 
-        set control-cluster security-model shared-secret secret "{{ controllerClusterPass }}"
+        set control-cluster security-model shared-secret secret "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
     - name: Wait 1 minute before initialize the control-cluster
       pause: minutes=1
     - name: Initialize the controller cluster 
       command: >
         /opt/vmware/nsx-cli/bin/scripts/nsxcli -c initialize control-cluster
       register: initialize
-    - name: Wait 3 more minutes and try again as it seems the controller is not ready
-      pause: minutes=3
+    - name: Wait 2 more minutes and try again as it seems the controller is not ready
+      pause: minutes=2
       when: "'initialization timed out' in initialize.stdout"
     - name: Retry when first try didn't work
       command: >
@@ -112,13 +102,11 @@
     - nsx-controller03
   serial: 1
   gather_facts: False
-  vars_files:
-    - ./answerfile.yml
   tasks:
     - name: Set security-model on controllers
       command: >
         /opt/vmware/nsx-cli/bin/scripts/nsxcli -c 
-        set control-cluster security-model shared-secret secret "{{ controllerClusterPass }}"
+        set control-cluster security-model shared-secret secret "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
     - name: Retrieve thumbprint
       command: >
         /opt/vmware/nsx-cli/bin/scripts/nsxcli 
@@ -129,18 +117,16 @@
 - name: Join the second and third controller on the master
   hosts: nsx-controller01
   gather_facts: False
-  vars_files:
-    - ./answerfile.yml
   tasks:
     - name: Join second controller to master controller
       command: >
         /opt/vmware/nsx-cli/bin/scripts/nsxcli -c 
-        join control-cluster "{{ controllers.nsxController02.ipAddress }}" 
+        join control-cluster "{{ hostvars['nsx-controller02'].ansible_ssh_host }}" 
         thumbprint "{{ hostvars['nsx-controller02']['thumbprint']['stdout'] }}"
     - name: Join third controllers to master controller
       command: >
         /opt/vmware/nsx-cli/bin/scripts/nsxcli -c 
-        join control-cluster "{{ controllers.nsxController03.ipAddress }}" 
+        join control-cluster "{{ hostvars['nsx-controller03'].ansible_ssh_host }}" 
         thumbprint "{{ hostvars['nsx-controller03']['thumbprint']['stdout'] }}"
   tags: nsxcontroller_join
 
@@ -148,8 +134,6 @@
   hosts: nsxcontrollers
   serial: 1
   gather_facts: False
-  vars_files:
-    - ./answerfile.yml
   tasks:
     - name: Activate Controllers
       command: >
@@ -166,11 +150,9 @@
       when: "'activation timed out' in activate.stdout"
   tags: nsxcontroller_activate
 
-- name: Activate Controllers
+- name: Wait
   hosts: localhost
   gather_facts: False
-  vars_files:
-    - ./answerfile.yml
   tasks:
-    - name: Wait for 1 minute before starting with the initial configuration
-      pause: seconds=60
+    - name: Wait for 30 seconds before starting with the initial configuration
+      pause: seconds=30

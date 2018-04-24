@@ -7,13 +7,20 @@
       nsxt_transport_node:
         display_name: "Edge1"
         node_id: "5304b0d6-2f6c-11e8-a634-005056a042bf"
-        static_ip_pool_id: "097b2a6e-a28a-4482-9fb6-f6dd72e18104"
         host_switch_name: hs1
         transport_zone_endpoints: 
           - tz1
-        pnics:
-          uplink-1: fp-eth2
-        uplink_profile: nsx-edge-uplink-hostswitch-profile
+          - edge-uplink-tz
+        host_switch:
+          - name: nvds1
+            pnics:
+              uplink-1: fp-eth1
+            uplink_profile: nsx-edge-uplink-hostswitch-profile
+            static_ip_pool_id: "097b2a6e-a28a-4482-9fb6-f6dd72e18104"
+          - name: vlan_hs
+            pnics:
+              uplink-1: fp-eth2
+            uplink_profile: nsx-edge-uplink-hostswitch-profile
         state: present
         nsx_manager: "10.29.12.209"
         nsx_username: "admin"

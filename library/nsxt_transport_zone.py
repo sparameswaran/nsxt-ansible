@@ -71,7 +71,7 @@ def main():
             nsx_username=dict(required=True, type='str'),
             nsx_passwd=dict(required=True, type='str', no_log=True)
         ),
-        supports_check_mode=False
+        supports_check_mode=True
     )
 
     if not HAS_PYNSXT:
@@ -104,17 +104,23 @@ def main():
                 nested_nsx=module.params['nested_nsx'],
                 tags=tags
             )
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(new_tz), id="1111")
             new_tz = transportzones_svc.create(new_tz)
             module.exit_json(changed=True, object_name=module.params['display_name'], id=new_tz.id, message="Transport Zone with name %s created!"%(module.params['display_name']))
         elif tz:
             if tags != tz.tags:
                 tz.tags=tags
+                if module.check_mode:
+                    module.exit_json(changed=True, debug_out=str(tz), id=tz.id)
                 new_tz = transportzones_svc.update(tz.id, tz)
                 module.exit_json(changed=True, object_name=module.params['display_name'], id=new_tz.id, message="Transport Zone with name %s has changed tags!"%(module.params['display_name']))
             module.exit_json(changed=False, object_name=module.params['display_name'], id=tz.id, message="Transport Zone with name %s already exists!"%(module.params['display_name']))
 
     elif module.params['state'] == "absent":
         if tz:
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(tz), id=tz.id)
             transportzones_svc.delete(tz.id)
             module.exit_json(changed=True, object_name=module.params['display_name'], message="Transport Zone with name %s deleted!"%(module.params['display_name']))
         module.exit_json(changed=False, object_name=module.params['display_name'], message="Transport Zone with name %s doe not exist!"%(module.params['display_name']))

@@ -102,7 +102,7 @@ def main():
             nsx_username=dict(required=True, type='str'),
             nsx_passwd=dict(required=True, type='str', no_log=True)
         ),
-        supports_check_mode=False
+        supports_check_mode=True
     )
 
     if not HAS_PYNSXT:
@@ -162,6 +162,8 @@ def main():
                 transport_vlan=module.params['transport_vlan'],
                 tags=tags
             )
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(new_prof), id="1111")
             try:
                 new_prof = hs_profile_svc.create(new_prof)
             except Error as ex:
@@ -187,12 +189,16 @@ def main():
 #                prof.lags = lag_list
 #                changed = True
             if changed:
+                if module.check_mode:
+                    module.exit_json(changed=True, debug_out=str(prof), id=prof.id)
                 new_prof = hs_profile_svc.update(prof.id, prof)
                 module.exit_json(changed=True, object_name=module.params['display_name'], id=prof.id, msg="Uplink Profile has been changed")
             module.exit_json(changed=False, object_name=module.params['display_name'], id=prof.id, message="Uplink Profile with name %s already exists!"%(module.params['display_name']))
 
     elif module.params['state'] == "absent":
         if prof:
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(prof), id=prof.id)
             hs_profile_svc.delete(prof.id)
             module.exit_json(changed=True, object_name=module.params['display_name'], message="Uplink Profile with name %s deleted!"%(module.params['display_name']))
         module.exit_json(changed=False, object_name=module.params['display_name'], message="Uplink Profile with name %s does not exist!"%(module.params['display_name']))

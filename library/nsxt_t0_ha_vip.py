@@ -70,7 +70,7 @@ def main():
             nsx_username=dict(required=True, type='str'),
             nsx_passwd=dict(required=True, type='str', no_log=True)
         ),
-        supports_check_mode=False
+        supports_check_mode=True
     )
 
     if not HAS_PYNSXT:
@@ -102,6 +102,8 @@ def main():
     if module.params['state'] == 'present':
         if lr.advanced_config.ha_vip_configs is None:
             lr.advanced_config.ha_vip_configs=haVipConfig
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(lr), id="1111")
             try:
                 new_lr = lr_svc.update(lr.id, lr)
                 module.exit_json(changed=True, object_name=module.params['vip_address'], id=lr.id, message="VIP for Logical Router with name %s was created!"%(lr.display_name))
@@ -110,6 +112,8 @@ def main():
                 module.fail_json(msg='API Error creating VIP: %s'%(str(api_error.error_message)))
         elif lr.advanced_config.ha_vip_configs != haVipConfig:
                 lr.advanced_config.ha_vip_configs=haVipConfig
+                if module.check_mode:
+                    module.exit_json(changed=True, debug_out=str(lr), id=lr.id)
                 new_lr = lr_svc.update(lr.id, lr)
                 module.exit_json(changed=True, object_name=module.params['vip_address'], id=lr.id, message="VIP for Logical Router with name %s has been changed!"%(lr.display_name))
         module.exit_json(changed=False, object_name=module.params['vip_address'], id=lr.id, message="VIP Logical Router with name %s already exists!"%(lr.display_name))
@@ -119,6 +123,8 @@ def main():
         if lr.advanced_config.ha_vip_configs:
             try:
                 lr.advanced_config.ha_vip_configs=None
+                if module.check_mode:
+                    module.exit_json(changed=True, debug_out=str(lr), id=lr.id)
                 new_lr = lr_svc.update(lr.id, lr)
                 module.exit_json(changed=True, object_name=module.params['vip_address'], id=lr.id, message="VIP for Logical Router with name %s was deleted!"%(lr.display_name))
 

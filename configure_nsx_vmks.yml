@@ -17,6 +17,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].vlan_ls_mgmt is defined
       register: ls1
 
     - name: NSX-T VLAN Logical Switch 2
@@ -31,6 +32,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].vlan_ls_vmotion is defined
       register: ls2
 
     - name: NSX-T VLAN Logical Switch 3
@@ -45,6 +47,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].vlan_ls_vsan is defined
       register: ls3
 
     - name: Remove previous SSH keys from known_hosts - NSX nodes

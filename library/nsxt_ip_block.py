@@ -22,9 +22,10 @@ __author__ = 'yasensim'
 
 import requests, time
 try:
+    from com.vmware.nsx.model_client import IpBlock
     from com.vmware.nsx.model_client import Tag
-    from com.vmware.nsx_client import LogicalSwitches
-    from com.vmware.nsx.model_client import LogicalSwitch
+
+    from com.vmware.nsx.pools_client import IpBlocks
 
     from com.vmware.vapi.std.errors_client import NotFound
     from vmware.vapi.lib import connect
@@ -37,22 +38,22 @@ try:
 except ImportError:
     HAS_PYNSXT = False
 
-def listLogicalSwitches(module, stub_config):
-    ls_list = []
+def listIpBlocks(module, stub_config):
+    ipblock_list = []
     try:
-        ls_svc = LogicalSwitches(stub_config)
-        ls_list = ls_svc.list()
+        ipblock_svc = IpBlocks(stub_config)
+        ipblock_list = ipblock_svc.list()
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Logical Switches: %s'%(api_error.error_message))
-    return ls_list
+        module.fail_json(msg='API Error listing IP BLOCKS: %s'%(api_error.error_message))
+    return ipblock_list
 
-def getLogicalSwitchByName(module, stub_config):
-    result = listLogicalSwitches(module, stub_config)
+def getIpBlockByName(module, stub_config):
+    result = listIpBlocks(module, stub_config)
     for vs in result.results:
-        ls = vs.convert_to(LogicalSwitch)
-        if ls.display_name == module.params['display_name']:
-            return ls
+        ipblock = vs.convert_to(IpBlock)
+        if ipblock.display_name == module.params['display_name']:
+            return ipblock
     return None
 
 def main():
@@ -60,13 +61,7 @@ def main():
         argument_spec=dict(
             display_name=dict(required=True, type='str'),
             description=dict(required=False, type='str', default=None),
-            admin_state=dict(required=False, type='str', default='UP', choices=['UP', 'DOWN']),
-            ip_pool_id=dict(required=False, type='str', default=None),
-            mac_pool_id=dict(required=False, type='str', default=None),
-            replication_mode=dict(required=False, type='str', default='MTEP', choices=['MTEP', 'SOURCE']),
-            switching_profile_ids=dict(required=False, type='list', default=None),
-            transport_zone_id=dict(required=True, type='str'),
-            vlan=dict(required=False, type='int', default=None),
+            cidr=dict(required=True, type='str'),
             tags=dict(required=False, type='dict', default=None),
             state=dict(required=False, type='str', default="present", choices=['present', 'absent']),
             nsx_manager=dict(required=True, type='str'),
@@ -93,49 +88,46 @@ def main():
         for key, value in module.params['tags'].items():
             tag=Tag(scope=key, tag=value)
             tags.append(tag)
-    ls_svc = LogicalSwitches(stub_config)
-    ls = getLogicalSwitchByName(module, stub_config)
+
+
+
+    ipblock_svc = IpBlocks(stub_config)
+    ipblock = getIpBlockByName(module, stub_config)
     if module.params['state'] == 'present':
-        if ls is None:
-            new_ls = LogicalSwitch(
-                display_name=module.params['display_name'],
-                description=module.params['description'],
-                address_bindings=None,
-                admin_state=module.params['admin_state'],
-                ip_pool_id=module.params['ip_pool_id'],
-                mac_pool_id=module.params['mac_pool_id'],
-                replication_mode=module.params['replication_mode'],
-                switching_profile_ids=None,
-                transport_zone_id=module.params['transport_zone_id'],
-                vlan=module.params['vlan'],
-                tags=tags
-            )
-            if module.check_mode:
-                module.exit_json(changed=True, debug_out=str(new_ls), id="1111")
-            new_ls = ls_svc.create(new_ls)
-#
-#  TODO: Check the realisation before exiting !!!!
-#
-            module.exit_json(changed=True, object_name=module.params['display_name'], id=new_ls.id, message="Logical Switch with name %s created!"%(module.params['display_name']))
-        elif ls:
-            changed = False
-            if tags != ls.tags:
-                changed = True
-                ls.tags=tags
+        if ipblock is None:
+            if module.params['state'] == "present":
+                new_ipblock = IpBlock(
+                    display_name=module.params['display_name'],
+                    description=module.params['description'],
+                    cidr=module.params['cidr'],
+                    tags=tags
+                )
                 if module.check_mode:
-                    module.exit_json(changed=True, debug_out=str(ls), id=ls.id)
-                new_ls = ls_svc.update(ls.id, ls)
+                    module.exit_json(changed=True, debug_out=str(new_ipblock), id="1111")
+                new_ipblock = ipblock_svc.create(new_ipblock)
+                module.exit_json(changed=True, object_name=module.params['display_name'], id=new_ipblock.id, message="IP BLOCK with name %s created!"%(module.params['display_name']))
+        elif ipblock:
+            changed = False
+            if tags != ipblock.tags:
+                changed = True
+                ipblock.tags=tags
+            if ipblock.cidr != module.params['cidr']:
+                ipblock.cidr = module.params['cidr']
+                changed = True
             if changed:
-                module.exit_json(changed=True, object_name=module.params['display_name'], id=new_ls.id, message="Logical Switch with name %s has changed tags!"%(module.params['display_name']))
-            module.exit_json(changed=False, object_name=module.params['display_name'], id=ls.id, message="Logical Switch with name %s already exists!"%(module.params['display_name']))
+                if module.check_mode:
+                    module.exit_json(changed=True, debug_out=str(ipblock), id=ipblock.id)
+                new_ipblock = ipblock_svc.update(ipblock.id, ipblock)
+                module.exit_json(changed=True, object_name=module.params['display_name'], id=ipblock.id, msg="IP Block has been changed")
+            module.exit_json(changed=False, object_name=module.params['display_name'], id=ipblock.id, message="IP Block with name %s already exists!"%(module.params['display_name']))
 
     elif module.params['state'] == "absent":
-        if ls:
+        if ipblock:
             if module.check_mode:
-                module.exit_json(changed=True, debug_out=str(ls), id=ls.id)
-            ls_svc.delete(ls.id)
-            module.exit_json(changed=True, object_name=module.params['display_name'], message="Logical Switch with name %s deleted!"%(module.params['display_name']))
-        module.exit_json(changed=False, object_name=module.params['display_name'], message="Logical Switch with name %s does not exist!"%(module.params['display_name']))
+                module.exit_json(changed=True, debug_out=str(ipblock), id=ipblock.id)
+            ipblock_svc.delete(ipblock.id)
+            module.exit_json(changed=True, object_name=module.params['display_name'], message="IP Block with name %s deleted!"%(module.params['display_name']))
+        module.exit_json(changed=False, object_name=module.params['display_name'], message="IP Block with name %s does not exist!"%(module.params['display_name']))
 
 from ansible.module_utils.basic import *
 

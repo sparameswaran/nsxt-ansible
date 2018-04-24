@@ -66,8 +66,6 @@ def getNodeByName(module, stub_config):
             return fn
     return None
 
-
-
 def getTransportZoneEndPoint(module, stub_config):
     tz_endpoints = []
     transportzones_svc = TransportZones(stub_config)
@@ -85,7 +83,7 @@ def getTransportZoneEndPoint(module, stub_config):
                 tz_endpoints.append(ep)
     return tz_endpoints
 
-def getUplinkProfileId(module, stub_config):
+def getUplinkProfileId(module, stub_config, prof_name):
     hsp_svc = HostSwitchProfiles(stub_config)
     try:
         hsps = hsp_svc.list()
@@ -95,42 +93,74 @@ def getUplinkProfileId(module, stub_config):
 
     for vs in hsps.results:
         fn = vs.convert_to(UplinkHostSwitchProfile)
-        if fn.display_name == module.params['uplink_profile']:
+        if fn.display_name == prof_name:
             return fn.id
+
+
+def createHostSwitchList(module, stub_config):
+    hs_list= []
+    for hostswitch in module.params['host_switch']:
+        pnic_list = []
+        uplink_profile_id=getUplinkProfileId(module, stub_config, hostswitch['uplink_profile'])
+        hsprof_list = []
+
+        hsptie=HostSwitchProfileTypeIdEntry(
+            key=HostSwitchProfileTypeIdEntry.KEY_UPLINKHOSTSWITCHPROFILE,
+            value=uplink_profile_id
+        )
+        hsprof_list.append(hsptie)
+        for key, value in hostswitch["pnics"].items():
+            pnic=Pnic(device_name=value, uplink_name=key)
+            pnic_list.append(pnic)
+
+        pool_id = None
+        if 'static_ip_pool_id' in hostswitch:
+            pool_id = hostswitch["static_ip_pool_id"]
+        hs=HostSwitch(
+            host_switch_name=hostswitch["name"],
+            host_switch_profile_ids=hsprof_list,
+            pnics=pnic_list,
+            static_ip_pool_id=pool_id
+        )
+
+        hs_list.append(hs)
+    return hs_list
 
 def createTransportNode(module, stub_config):
     tz_endpoints=getTransportZoneEndPoint(module, stub_config)
-    uplink_profile_id=getUplinkProfileId(module, stub_config)
+    # uplink_profile_id=getUplinkProfileId(module, stub_config)
     
-    hsprof_list = []
-    hsptie=HostSwitchProfileTypeIdEntry(
-        key=HostSwitchProfileTypeIdEntry.KEY_UPLINKHOSTSWITCHPROFILE,
-        value=uplink_profile_id
-    )
-    hsprof_list.append(hsptie)
+    # hsprof_list = []
+    # hsptie=HostSwitchProfileTypeIdEntry(
+    #     key=HostSwitchProfileTypeIdEntry.KEY_UPLINKHOSTSWITCHPROFILE,
+    #     value=uplink_profile_id
+    # )
+    # hsprof_list.append(hsptie)
 
-    pnic_list = []
-    for pnicentry in module.params["pnics"]:
-      for key, value in pnicentry.items():
-        pnic=Pnic(device_name=value, uplink_name=key)
-        pnic_list.append(pnic)
+    # pnic_list = []
+    # for pnicentry in module.params["pnics"]:
+    #   for key, value in pnicentry.items():
+    #     pnic=Pnic(device_name=value, uplink_name=key)
+    #     pnic_list.append(pnic)
 
-    hs_list= []
-    index = 0
-    for host_switch_name in module.params["host_switch_name"]:
-        static_ip_pool_id=module.params["static_ip_pool_id"]
-        if 'overlay' not in host_switch_name.lower():
-            static_ip_pool_id=None
+    # hs_list= []
+    # index = 0
+    # for host_switch_name in module.params["host_switch_name"]:
+    #     static_ip_pool_id=module.params["static_ip_pool_id"]
+    #     if 'overlay' not in host_switch_name.lower():
+    #         static_ip_pool_id=None
 
-        hs=HostSwitch(
-            host_switch_name=host_switch_name,
-            host_switch_profile_ids=hsprof_list,
-            pnics=[ pnic_list[index] ],
-            static_ip_pool_id=static_ip_pool_id
-        )
-        hs_list.append(hs)
-        index += 1
+    #     hs=HostSwitch(
+    #         host_switch_name=host_switch_name,
+    #         host_switch_profile_ids=hsprof_list,
+    #         pnics=[ pnic_list[index] ],
+    #         static_ip_pool_id=static_ip_pool_id
+    #     )
+    #     hs_list.append(hs)
+    #     index += 1
 
+
+    hs_list = createHostSwitchList(module, stub_config)
     tn_svc = TransportNodes(stub_config)
     transport_node=TransportNode(
         display_name=module.params['display_name'],
@@ -151,59 +181,63 @@ def createTransportNode(module, stub_config):
     return rs
 
 
+
 def updateTransportNode(module, stub_config):
     changed = False
     node = getTransportNodeByName(module, stub_config)
+    hs_list = createHostSwitchList(module, stub_config)
 
-    pnic_list = []
-    for pnicentry in module.params["pnics"]:
-      for key, value in pnicentry.items():
-        pnic=Pnic(device_name=value, uplink_name=key)
-        pnic_list.append(pnic)
+    # pnic_list = []
+    # for pnicentry in module.params["pnics"]:
+    #   for key, value in pnicentry.items():
+    #     pnic=Pnic(device_name=value, uplink_name=key)
+    #     pnic_list.append(pnic)
+    tmp_hs_list = node.host_switches
+    for tmp in tmp_hs_list:
+        tmp.host_switch_profile_ids=None
+    tmp_hs_list2 = hs_list
+    for tmp2 in tmp_hs_list2:
+        tmp2.host_switch_profile_ids=None
 
-    if pnic_list != node.host_switches[0].pnics:
+    if tmp_hs_list != tmp_hs_list2:
         changed = True
 
     tz_endpoints=getTransportZoneEndPoint(module, stub_config)
     if len(tz_endpoints) != len(node.transport_zone_endpoints):
         changed = True
-    isThere = False
-    uplink_profile_id=getUplinkProfileId(module, stub_config)
-    for prof_id in node.host_switches[0].host_switch_profile_ids:
-        if uplink_profile_id == prof_id.value:
-            isThere = True
-    if not isThere:
-        changed = True
-    if node.host_switches[0].static_ip_pool_id != module.params["static_ip_pool_id"]:
-        changed = True
     if changed:
-        hsptie=HostSwitchProfileTypeIdEntry(
-            key=HostSwitchProfileTypeIdEntry.KEY_UPLINKHOSTSWITCHPROFILE,
-            value=uplink_profile_id
-        )
-        hsprof_list = []
-        hsprof_list.append(hsptie)
+        # hsptie=HostSwitchProfileTypeIdEntry(
+        #     key=HostSwitchProfileTypeIdEntry.KEY_UPLINKHOSTSWITCHPROFILE,
+        #     value=uplink_profile_id
+        # )
+        # hsprof_list = []
+        # hsprof_list.append(hsptie)
 
-        hs_list= []
-        index = 0
-        for host_switch_name in module.params["host_switch_name"]:
-            static_ip_pool_id=module.params["static_ip_pool_id"]
-            if 'overlay' not in host_switch_name.lower():
-                static_ip_pool_id=None
+        # hs_list= []
+        # index = 0
+        # for host_switch_name in module.params["host_switch_name"]:
+        #     static_ip_pool_id=module.params["static_ip_pool_id"]
+        #     if 'overlay' not in host_switch_name.lower():
+        #         static_ip_pool_id=None
 
-            hs=HostSwitch(
-                host_switch_name=host_switch_name,
-                host_switch_profile_ids=hsprof_list,
-                pnics=[ pnic_list[index] ],
-                static_ip_pool_id=static_ip_pool_id
-            )
-            hs_list.append(hs)
-            index += 1
+        #     hs=HostSwitch(
+        #         host_switch_name=host_switch_name,
+        #         host_switch_profile_ids=hsprof_list,
+        #         pnics=[ pnic_list[index] ],
+        #         static_ip_pool_id=static_ip_pool_id
+        #     )
+        #     hs_list.append(hs)
+        #     index += 1
 
 
-        tn_svc = TransportNodes(stub_config)
+        # tn_svc = TransportNodes(stub_config)
+        node = getTransportNodeByName(module, stub_config)
+        node.transport_zone_endpoints = tz_endpoints
+        hs_list = createHostSwitchList(module, stub_config)
         node.host_switches=hs_list
-        node.transport_zone_endpoints=tz_endpoints
+        tn_svc = TransportNodes(stub_config)
+        if module.check_mode:
+            module.exit_json(changed=True, debug_out=str(node), id=node.id)
         try:
             rs = tn_svc.update(node.id, node)
         except Error as ex:
@@ -272,17 +306,19 @@ def main():
             node_id=dict(required=False, type='str', default=None),
             node_name=dict(required=False, type='str'),
             maintenance_mode=dict(required=False, type='str', choices=['DISABLED', 'ENABLED', 'FORCE_ENABLED']),
-            static_ip_pool_id=dict(required=True, type='str'),
-            host_switch_name=dict(required=False, type='list'),
+            # static_ip_pool_id=dict(required=True, type='str'),
+            # host_switch_name=dict(required=False, type='list'),
+            # transport_zone_endpoints=dict(required=False, type='list'),
+            # pnics=dict(required=False, type='list'),
+            # uplink_profile=dict(required=False, type='str'),
+            host_switch=dict(required=True, type='list'),
             transport_zone_endpoints=dict(required=False, type='list'),
-            pnics=dict(required=False, type='list'),
-            uplink_profile=dict(required=False, type='str'),
             state=dict(required=False, type='str', default="present", choices=['present', 'absent']),
             nsx_manager=dict(required=True, type='str'),
             nsx_username=dict(required=True, type='str'),
             nsx_passwd=dict(required=True, type='str', no_log=True)
         ),
-        supports_check_mode=False
+        supports_check_mode=True
     )
 
     if not HAS_PYNSXT:
@@ -303,6 +339,8 @@ def main():
     if module.params['state'] == "present":
         node = getTransportNodeByName(module, stub_config)
         if node is None:
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out="Transport Node will be created", id="1111")
             result = createTransportNode(module, stub_config)
             module.exit_json(changed=True, object_name=module.params['display_name'], id=result.id, body=str(result))
         else:
@@ -322,6 +360,8 @@ def main():
         if node is None:
             module.exit_json(changed=False, object_name=module.params['display_name'], message="No Transport Node with name %s"%(module.params['display_name']))
         else:
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(node), id=node.id)
             deleteTransportNode(module, node, stub_config)
             module.exit_json(changed=True, object_name=module.params['display_name'], message="Transport Node with name %s deleted"%(module.params['display_name']))
 

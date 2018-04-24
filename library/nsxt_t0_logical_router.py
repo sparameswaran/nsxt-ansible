@@ -80,7 +80,7 @@ def main():
             nsx_username=dict(required=True, type='str'),
             nsx_passwd=dict(required=True, type='str', no_log=True)
         ),
-        supports_check_mode=False
+        supports_check_mode=True
     )
 
     if not HAS_PYNSXT:
@@ -113,6 +113,8 @@ def main():
                 high_availability_mode=module.params['high_availability_mode'],
                 tags=tags
             )
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(new_lr), id="1111")
             try:
                 new_lr = lr_svc.create(new_lr)
                 module.exit_json(changed=True, object_name=module.params['display_name'], id=new_lr.id, message="Logical Router with name %s created!"%(module.params['display_name']))
@@ -121,6 +123,8 @@ def main():
         elif lr:
             if tags != lr.tags:
                 lr.tags=tags
+                if module.check_mode:
+                    module.exit_json(changed=True, debug_out=str(lr), id=lr.id)
                 new_lr = lr_svc.update(lr.id, lr)
                 module.exit_json(changed=True, object_name=module.params['display_name'], id=new_lr.id, message="Logical Router with name %s has changed tags!"%(module.params['display_name']))
             module.exit_json(changed=False, object_name=module.params['display_name'], id=lr.id, message="Logical Router with name %s already exists!"%(module.params['display_name']))
@@ -128,6 +132,8 @@ def main():
     elif module.params['state'] == "absent":
 
         if lr:
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(lr), id=lr.id)
             try:
                 deleteAllPortsOnRouter(lr, module, stub_config)
                 lr_svc.delete(lr.id)

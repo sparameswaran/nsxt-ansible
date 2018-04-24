@@ -69,7 +69,7 @@ def main():
             nsx_username=dict(required=True, type='str'),
             nsx_passwd=dict(required=True, type='str', no_log=True)
         ),
-        supports_check_mode=False
+        supports_check_mode=True
     )
 
     if not HAS_PYNSXT:
@@ -103,6 +103,8 @@ def main():
                 switching_profile_ids=None,
                 tags=tags
             )
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(new_lsp), id="1111")
             new_lsp = lsp_svc.create(new_lsp)
             module.exit_json(changed=True, object_name=module.params['display_name'], id=new_lsp.id, message="Logical Switch Port with name %s created!"%(module.params['display_name']))
         elif lsp:
@@ -110,6 +112,8 @@ def main():
             if tags != lsp.tags:
                 changed = True
                 lsp.tags=tags
+                if module.check_mode:
+                    module.exit_json(changed=True, debug_out=str(lsp), id=lsp.id)
                 new_lsp = lsp_svc.update(lsp.id, lsp)
             if changed:
                 module.exit_json(changed=True, object_name=module.params['display_name'], id=new_lsp.id, message="Logical Switch Port with name %s has changed tags!"%(module.params['display_name']))
@@ -117,6 +121,8 @@ def main():
 
     elif module.params['state'] == "absent":
         if lsp:
+            if module.check_mode:
+                module.exit_json(changed=True, debug_out=str(lsp), id=lsp.id)
             lsp_svc.delete(lsp.id)
             module.exit_json(changed=True, object_name=module.params['display_name'], message="Logical Switch Port with name %s deleted!"%(module.params['display_name']))
         module.exit_json(changed=False, object_name=module.params['display_name'], message="Logical Switch Port with name %s does not exist!"%(module.params['display_name']))
