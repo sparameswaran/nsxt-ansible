@@ -10,8 +10,7 @@
         description: "Ansible created TZ for Overlay Traffic"
         host_switch_name: "{{ hostvars['localhost'].overlay_hostswitch }}"
         transport_type: 'OVERLAY'
-        tags: "{{ t0_router.tags }}" 
-          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        tags: "{{ t0_router.tags }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
