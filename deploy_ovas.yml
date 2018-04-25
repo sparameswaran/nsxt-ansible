@@ -27,6 +27,7 @@
         vcenter: "{{ hostvars['localhost'].deployVcIPAddress }}"
         vcenter_user: "{{ hostvars['localhost'].deployVcUser }}"
         vcenter_passwd: "{{ hostvars['localhost'].deployVcPassword }}"
+        deployment_size: "{{ hostvars['localhost'].nsx_t_mgr_deploy_size }}"
       with_items: "{{ groups['nsxmanagers'] }}"
       async: 7200
       poll: 0
@@ -89,6 +90,7 @@
         vcenter: "{{ hostvars['localhost'].deployVcIPAddress }}"
         vcenter_user: "{{ hostvars['localhost'].deployVcUser }}"
         vcenter_passwd: "{{ hostvars['localhost'].deployVcPassword }}"
+        deployment_size: "{{ hostvars['localhost'].nsx_t_edge_deploy_size }}"
       with_items: "{{ groups['nsxedges'] }}"
       async: 7200
       poll: 0

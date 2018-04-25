@@ -82,7 +82,8 @@ def main():
             disk_mode=dict(default='thin'),
             vcenter=dict(required=True, type='str'),
             vcenter_user=dict(required=True, type='str'),
-            vcenter_passwd=dict(required=True, type='str', no_log=True)
+            vcenter_passwd=dict(required=True, type='str', no_log=True),
+            deployment_size=dict(required=False, type='str')
         ),
         supports_check_mode=True,
         required_together=[['portgroup_ext', 'portgroup_transport']]
@@ -108,6 +109,11 @@ def main():
                         '--allowExtraConfig', '--diskMode={}'.format(module.params['disk_mode']),
                         '--datastore={}'.format(module.params['datastore']),
                         '--name={}'.format(module.params['vmname'])]
+
+    # Support switching deployment size
+    if module.params['deployment_size'] and module.params['deployment_size'] != '':
+        ovf_base_options.extend(['--deploymentOption={}'.format(module.params['deployment_size'])])    
+
     if module.params['portgroup_ext']:
         ovf_base_options.extend(['--net:Network 0={}'.format(module.params['portgroup']),
                                  '--net:Network 1={}'.format(module.params['portgroup_ext']),
