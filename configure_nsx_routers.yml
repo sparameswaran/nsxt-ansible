@@ -18,6 +18,42 @@
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       register: overlay_tzone
 
+    - name: NSX-T IP Block
+      nsxt_ip_block:
+        display_name: "{{ item.name }}"
+        description: "IP Block created by Ansible"
+        cidr: "{{ item.cidr }}"
+        tags:
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: container_ip_blocks is defined
+      register: ipblocks
+      with_items: "{{ container_ip_blocks }}"
+
+    - name: NSX-T External IP Pools
+      nsxt_ip_pool:
+        display_name: "{{ item.name }}"
+        description: "External IP Pool for Containers"
+        subnets:
+          - cidr: "{{ item.cidr }}"
+            allocation_ranges:
+              - "{{ item.start }}-{{item.end}}"
+            dns_nameservers:
+              - "{{ item.nameserver }}"
+            dns_suffix: "{{ item.dns_domain }}"
+            gateway_ip: "{{ item.gateway }}"
+        tags: "{{ item.tags }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: external_ip_pools is defined
+      register: external_ip_pools
+      with_items: "{{ external_ip_pools }}"
+
     - name: NSX-T T0 Logical Router
       nsxt_t0_logical_router:
         display_name: "{{ t0_router.name }}"
@@ -40,6 +76,13 @@
         connected_t0_id: "{{ t0.id }}"
         tags:
           ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        advertise:
+          enabled: True
+          advertise_lb_snat_ip: False
+          advertise_lb_vip: True
+          advertise_nat_routes: True
+          advertise_nsx_connected_routes: True
+          advertise_static_routes: False
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'

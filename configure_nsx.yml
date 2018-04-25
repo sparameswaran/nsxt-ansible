@@ -65,20 +65,6 @@
       when: hostvars['localhost'].tep_pool_name is defined
       register: tepippool
 
-    - name: NSX-T IP Block
-      nsxt_ip_block:
-        display_name: "{{ hostvars['localhost'].ip_block_name }}"
-        description: "IP Block created by Ansible"
-        cidr: "{{ hostvars['localhost'].ip_block_cidr }}"
-        tags:
-          ncp/cluster: "{{ hostvars['localhost'].tag }}"
-        state: present
-        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
-        nsx_username: 'admin'
-        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
-      when: hostvars['localhost'].ip_block_name is defined
-      register: ipblock
-
     - name: Single Uplink Profile
       nsxt_uplink_profile:
         display_name: "{{ hostvars['localhost'].edge_single_uplink_profile_name }}"
@@ -167,8 +153,7 @@
         description: "Default T0 Router {{t0_router.name}}"
         edge_cluster_id: "{{ edge_cluster.id }}"
         high_availability_mode: "{{ t0_router.ha_mode }}"
-        tags:
-          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        tags: "{{ t0_router.tags }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -182,8 +167,7 @@
         description: "T0 Uplink VLAN Logical Switch"
         transport_zone_id: "{{ vlan_tzone.id }}"
         vlan: "{{ t0_router.vlan_uplink }}"
-        tags:
-          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        tags: "{{ t0_router.tags }}" 
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -196,8 +180,7 @@
         display_name: "to_{{ t0_router.name}}_uplink1"
         description: "Logical Switch Port"
         logical_switch_id: "{{ uplink_ls.id }}"
-        tags:
-          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        tags: "{{ t0_router.tags }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -211,7 +194,7 @@
         description: "{{ t0_router.name}} T0 Uplink"
         edge_cluster_member: "{{ groups['nsxedges'][0] }}"
         urpf: 'NONE'
-        t0_router: "{{ t0_router.name}}"
+        t0_router: "{{ t0_router.tags }}"
         logical_switch_port_id: "{{ uplink_lsp.id }}"
         ip_address: "{{ t0_router.ip1}}"
         tags:
@@ -228,8 +211,7 @@
         display_name: "to_{{ t0_router.name}}_uplink2"
         description: "Logical Switch Port"
         logical_switch_id: "{{ uplink_ls.id }}"
-        tags:
-          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        tags: "{{ t0_router.tags }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -246,8 +228,7 @@
         t0_router: "{{ t0_router.name}}"
         logical_switch_port_id: "{{ uplink_lsp2.id }}"
         ip_address: "{{ t0_router.ip2}}"
-        tags:
-          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        tags: "{{ t0_router.tags }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -279,8 +260,7 @@
         - "{{ t0_router.static_route.next_hop }}"
         admin_distance: "{{t0_router.static_route.admin_distance}}"
         router_name: "{{t0_router.name}}"
-        tags:
-          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        tags: "{{ t0_router.tags }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: "admin"
@@ -342,7 +322,7 @@
       until: job_result.finished
       with_items: "{{ fnode.results }}"
       when: groups['nsxtransportnodes'] is defined
-      retries: 40
+      retries: 100
 
     - name: NSX-T Esxi Transport Node
       nsxt_transport_node:
