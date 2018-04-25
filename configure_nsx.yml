@@ -194,11 +194,10 @@
         description: "{{ t0_router.name}} T0 Uplink"
         edge_cluster_member: "{{ groups['nsxedges'][0] }}"
         urpf: 'NONE'
-        t0_router: "{{ t0_router.tags }}"
+        t0_router: "{{ t0_router.name }}"
         logical_switch_port_id: "{{ uplink_lsp.id }}"
         ip_address: "{{ t0_router.ip1}}"
-        tags:
-          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        tags: "{{ t0_router.tags }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
