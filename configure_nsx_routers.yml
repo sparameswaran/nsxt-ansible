@@ -53,7 +53,7 @@
         t1_router_ids: "{{ t1_router_ids|default([]) | combine ( {item.invocation.module_args.display_name: item.id } ) }}"
       with_items: "{{ t1.results }}"
 
-    - debug: msg="{{t1_router_ids}}"
+    #- debug: msg="{{t1_router_ids}}"
 
     - name: NSX-T Logical Switch and Port
       block:
@@ -188,7 +188,7 @@
 #     }
 # }
 
-      - debug: msg="{{ lsp.results[0]}}"
+      #- debug: msg="{{ lsp.results[0]}}"
 
 # Sample output of lsp.results
 # ok: [localhost] => {
@@ -256,7 +256,7 @@
 
 
       
-      - debug: msg="{{lsp.results[0].item.item}}" # To get the t1_router structure with router & logical switch name
+      #- debug: msg="{{lsp.results[0].item.item}}" # To get the t1_router structure with router & logical switch name
 # Sample output
 # ok: [localhost] => {
 #     "msg": [
@@ -271,13 +271,13 @@
 #     ]
 # }
 
-      - debug: msg="{{lsp.results[0].item.item.0.name}}" # To get the T1 router name
+      #- debug: msg="{{lsp.results[0].item.item.0.name}}" # To get the T1 router name
 # Sample output
 # ok: [localhost] => {
 #     "msg": "T1Router-Mgmt"
 # }
 
-      - debug: msg="{{ lsp.results[0].item.item.1.name}}" # To get the logical switch name
+      #- debug: msg="{{ lsp.results[0].item.item.1.name}}" # To get the logical switch name
 # Sample output
 # ok: [localhost] => {
 #     "msg": "InfraLogicalSwitch"
