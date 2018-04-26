@@ -65,7 +65,7 @@
         - { path: "{{ nsx_manager_path }}", ovf_filename: "{{ nsx_manager_ovf }}" }
         - { path: "{{ nsx_controller_path }}", ovf_filename: "{{ nsx_controller_ovf }}" }
         - { path: "{{ nsx_gw_path }}", ovf_filename: "{{ nsx_gw_ovf }}" }
-      when: nsx_t_keep_reservation is defined and nsx_t_keep_reservation == 'false'
+      when: nsx_t_keep_reservation is defined and nsx_t_keep_reservation == false
       tags: reservations
 
     # - name: size down NSX Manager
