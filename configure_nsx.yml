@@ -366,7 +366,7 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
-      when: hostvars['localhost'].compute_manager is defined
+      when: hostvars['localhost'].compute_manager is defined and groups['nsxtransportnodes'] is not defined
       register: cmp_manager
 
     - name: NSX-T Compute Manager Cluster
