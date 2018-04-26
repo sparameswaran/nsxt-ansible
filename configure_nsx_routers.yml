@@ -39,10 +39,10 @@
           - cidr: "{{ item.cidr }}"
             allocation_ranges:
               - "{{ item.start }}-{{item.end}}"
-            dns_nameservers:
-              - "{{ item.nameserver }}"
-            dns_suffix: "{{ item.dns_domain }}"
-            gateway_ip: "{{ item.gateway }}"
+            #dns_nameservers:
+            #  - "{ item.nameserver }"
+            #dns_suffix: "{ item.dns_domain }"
+            #gateway_ip: "{ item.gateway }"
         tags: "{{ item.tags }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"

@@ -102,10 +102,7 @@ def main():
 
         ip_pool_subnet = IpPoolSubnet(
             allocation_ranges=ip_range_list,
-            cidr=subnet['cidr'],
-            dns_nameservers=subnet['dns_nameservers'],
-            dns_suffix=subnet['dns_suffix'],
-            gateway_ip=subnet['gateway_ip']
+            cidr=subnet['cidr']
         )
         subnet_list.append(ip_pool_subnet)
 
