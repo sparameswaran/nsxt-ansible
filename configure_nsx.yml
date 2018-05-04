@@ -324,6 +324,13 @@
       retries: 100
       ignore_errors: yes # Handle duplicate hosts or hosts that already got added
 
+    - name: Set Fabric Node Status failed flag
+      set_fact: flag=failed
+      when: "'FAILED' in job_result.stderr and 'already exists' not in job_result.stderr"
+
+    - fail: msg="Check Fabric Node Status Failed"
+      when: flag=="failed"
+
     - name: NSX-T Esxi Transport Node
       nsxt_transport_node:
         display_name: "{{ item }}"
