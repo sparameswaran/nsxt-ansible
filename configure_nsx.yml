@@ -325,10 +325,10 @@
       ignore_errors: yes # Handle duplicate hosts or hosts that already got added
 
     - debug: msg="{{job_result.results}}"
-    - debug: msg="{{item}}"
+    - debug: msg="{{item.message}}"
       with_subelements: 
       - "{{ job_result.results }}"
-      - message 
+      - msg 
 
     - name: Set Fabric Node Status failed flag
       set_fact: flag=failed
