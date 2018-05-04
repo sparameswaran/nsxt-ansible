@@ -322,6 +322,7 @@
       with_items: "{{ fnode.results }}"
       when: groups['nsxtransportnodes'] is defined
       retries: 100
+      ignore_errors: yes # Handle duplicate hosts or hosts that already got added
 
     - name: NSX-T Esxi Transport Node
       nsxt_transport_node:
