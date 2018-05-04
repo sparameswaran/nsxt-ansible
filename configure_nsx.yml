@@ -322,7 +322,7 @@
       with_items: "{{ fnode.results }}"
       when: groups['nsxtransportnodes'] is defined
       retries: 100
-      failed_when: " 'FAILED' in job_result.stderr and 'already exists' NOT in job_result.results" # Handle duplicate hosts or hosts that already got added
+      failed_when: " 'FAILED' in job_result.stderr and 'already exists' not in job_result.results" # Handle duplicate hosts or hosts that already got added
 
     - name: NSX-T Esxi Transport Node
       nsxt_transport_node:
