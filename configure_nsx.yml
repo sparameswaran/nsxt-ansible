@@ -327,13 +327,13 @@
     - debug: msg="{{job_result.results}}"
 
     - name: Set Fabric Node Status failed flag
-      set_fact: flag=failed
+      set_fact: failed_flag=failed
       when: "'already exists' not in item.message and item.stderr is defined and 'FAILED' in item.stderr "
       with_items: 
       - "{{ job_result.results }}"
 
     - fail: msg="Check Fabric Node Status Failed"
-      when: flag=="failed"
+      when: failed_flag is defined
 
     - name: NSX-T Esxi Transport Node
       nsxt_transport_node:
