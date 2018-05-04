@@ -328,7 +328,6 @@
     - debug: msg="{{item.message}}"
       with_subelements: 
       - "{{ job_result.results }}"
-      - msg 
 
     - name: Set Fabric Node Status failed flag
       set_fact: flag=failed
