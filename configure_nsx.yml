@@ -324,7 +324,7 @@
       retries: 100
       ignore_errors: True
 
-    - debug: msg="{{job_result.results}}"
+    #- debug: msg="{{job_result.results}}"
 
     - name: Set Fabric Node Status failed flag
       set_fact: failed_flag=failed
