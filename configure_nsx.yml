@@ -322,19 +322,7 @@
       with_items: "{{ fnode.results }}"
       when: groups['nsxtransportnodes'] is defined
       retries: 100
-      ignore_errors: yes # Handle duplicate hosts or hosts that already got added
-
-    - debug: msg="{{job_result.results}}"
-    - debug: msg="{{item.message}}"
-      with_items: 
-      - "{{ job_result.results }}"
-
-    - name: Set Fabric Node Status failed flag
-      set_fact: flag=failed
-      when: "'FAILED' in job_result.results.stderr and 'already exists' not in job_result.results.stderr"
-
-    - fail: msg="Check Fabric Node Status Failed"
-      when: flag=="failed"
+      failed_when: " 'FAILED' in job_result.stderr and 'already exists' NOT in job_result.results" # Handle duplicate hosts or hosts that already got added
 
     - name: NSX-T Esxi Transport Node
       nsxt_transport_node:
