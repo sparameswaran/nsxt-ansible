@@ -326,7 +326,7 @@
 
     - name: Set Fabric Node Status failed flag
       set_fact: flag=failed
-      when: "'FAILED' in job_result.stderr and 'already exists' not in job_result.stderr"
+      when: "'FAILED' in job_result.results.stderr and 'already exists' not in job_result.results.stderr"
 
     - fail: msg="Check Fabric Node Status Failed"
       when: flag=="failed"
