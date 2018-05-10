@@ -75,7 +75,7 @@
 
     - debug: msg="{{join_result}}"
 
-    - name: Set Controllers Join Status failed flag
+    - name: Check for Controllers Join Status failed
       set_fact: failed_flag=failed
       when: "'is already registered' not in item.stdout and item.stderr is defined and 'FAILED' in item.stderr "
       with_items:
