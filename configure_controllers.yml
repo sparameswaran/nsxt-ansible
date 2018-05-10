@@ -70,7 +70,8 @@
         username admin
         thumbprint "{{ hostvars['nsx-manager']['thumbprint']['stdout'] }}"
         password "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
-      ignore_errors: yes
+      # Dont ignore errors
+      #ignore_errors: yes
   tags: nsxmanager_join
 
 - name: Prepare first Controller
