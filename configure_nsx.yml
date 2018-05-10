@@ -369,22 +369,22 @@
 
     - name: NSX-T Compute Manager
       nsxt_compute_manager:
-        display_name: "{{ hostvars['localhost'].compute_manager }}"
-        server: "{{ hostvars['localhost'].deployVcIPAddress }}"
-        username: "{{ hostvars['localhost'].deployVcUser }}"
-        passwd: "{{ hostvars['localhost'].deployVcPassword }}"
+        display_name: "{{ hostvars['localhost'].compute_vcenter_manager }}"
+        server: "{{ hostvars['localhost'].compute_vcenter_host }}"
+        username: "{{ hostvars['localhost'].compute_vcenter_user }}"
+        passwd: "{{ hostvars['localhost'].compute_vcenter_password }}"
         origin_type: "vCenter"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
-      when: hostvars['localhost'].compute_manager is defined and groups['nsxtransportnodes'] is not defined
+      when: hostvars['localhost'].compute_vcenter_manager is defined and groups['nsxtransportnodes'] is not defined
       register: cmp_manager
 
     - name: NSX-T Compute Manager Cluster
       nsxt_cm_cluster:
-        display_name: "{{ hostvars['localhost'].cm_cluster }}"
-        cm_name: "{{ hostvars['localhost'].compute_manager }}"
+        display_name: "{{ hostvars['localhost'].compute_vcenter_cluster }}"
+        cm_name: "{{ hostvars['localhost'].compute_vcenter_manager }}"
         auto_install_nsx: True
         create_transport_node: True
         transport_zone_endpoints: 

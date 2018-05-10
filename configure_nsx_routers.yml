@@ -141,7 +141,7 @@
 #       },
 #       {
 #           "name": "InfraLogicalSwitch",
-#           "subnet_ip": "192.168.10.1",
+#           "logical_switch_gw": "192.168.10.1",
 #           "subnet_mask": 26
 #       }
 #   ],
@@ -213,7 +213,7 @@
 #                 },
 #                 {
 #                     "name": "InfraLogicalSwitch",
-#                     "subnet_ip": "192.168.10.1",
+#                     "logical_switch_gw": "192.168.10.1",
 #                     "subnet_mask": 26
 #                 }
 #             ],
@@ -279,7 +279,7 @@
 #                 },
 #                 {
 #                     "name": "InfraLogicalSwitch",
-#                     "subnet_ip": "192.168.10.1",
+#                     "logical_switch_gw": "192.168.10.1",
 #                     "subnet_mask": 26
 #                 }
 #             ],
@@ -302,7 +302,7 @@
 #         },
 #         {
 #             "name": "InfraLogicalSwitch",
-#             "subnet_ip": "192.168.10.1",
+#             "logical_switch_gw": "192.168.10.1",
 #             "subnet_mask": 26
 #         }
 #     ]
@@ -328,7 +328,7 @@
           logical_router_id: "{{ t1_router_ids[item.item.item.0.name] }}" # Use the T1 Router name and get its id
           linked_logical_switch_port_id: "{{ item.id }}"
           subnets:
-            - ip_addresses: [ "{{ item.item.item.1.subnet_ip}}" ]
+            - ip_addresses: [ "{{ item.item.item.1.logical_switch_gw}}" ]
               prefix_length: "{{ item.item.item.1.subnet_mask}}"
           tags: "{{ t0_router.tags }}" 
           state: present
