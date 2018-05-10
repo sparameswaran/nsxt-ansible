@@ -328,7 +328,7 @@
 
     - name: Set Fabric Node Status failed flag
       set_fact: failed_flag=failed
-      when: "'already exists' not in item.message and item.stderr is defined and 'FAILED' in item.stderr "
+      when: "(item.msg is defined and 'FAILED' in item.msg) or (item.message is defined and 'already exists' not in item.message and item.stderr is defined and 'FAILED' in item.stderr) "
       with_items: 
       - "{{ job_result.results }}"
 

@@ -70,9 +70,24 @@
         username admin
         thumbprint "{{ hostvars['nsx-manager']['thumbprint']['stdout'] }}"
         password "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
-      # Dont ignore errors
-      #ignore_errors: yes
+      ignore_errors: yes
+      register: join_result
+
+    - debug: msg="{{join_result}}"
+
+    - name: Set Controllers Join Status failed flag
+      set_fact: failed_flag=failed
+      when: "'is already registered' not in item.stdout and item.stderr is defined and 'FAILED' in item.stderr "
+      with_items:
+      - "{{ join_result}}"
+
+    - fail: msg="Check Controllers Join Status Failed"
+      when: failed_flag is defined
+
   tags: nsxmanager_join
+  
+
+
 
 - name: Prepare first Controller
   hosts: nsx-controller01
