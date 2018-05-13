@@ -50,12 +50,14 @@
       when: hostvars['localhost'].vlan_ls_vsan is defined
       register: ls3
 
-    - name: Remove previous SSH keys from known_hosts - NSX nodes
-      command: ssh-keygen -R "{{ hostvars[item]['ansible_ssh_host'] }}"
-      register: command_result
-      failed_when: "command_result.rc > 0 and command_result.rc != 255"
-      with_items: "{{ groups['nsxtransportnodes'] }}"
-    - name: add host to known_hosts - Managers
-      shell: mkdir -p ~/.ssh; ssh-keyscan -H "{{ hostvars[item]['ansible_ssh_host'] }}" >> ~/.ssh/known_hosts
-      with_items: "{{ groups['nsxtransportnodes'] }}"
+    # - name: Remove previous SSH keys from known_hosts - NSX nodes
+    #   command: ssh-keygen -R "{{ hostvars[item]['ansible_ssh_host'] }}"
+    #   register: command_result
+    #   failed_when: "command_result.rc > 0 and command_result.rc != 255"
+    #   with_items: "{{ groups['nsxtransportnodes'] }}"
+    #   when: groups['nsxtransportnodes'] is defined
+    # - name: add host to known_hosts - Managers
+    #   shell: mkdir -p ~/.ssh; ssh-keyscan -H "{{ hostvars[item]['ansible_ssh_host'] }}" >> ~/.ssh/known_hosts
+    #   with_items: "{{ groups['nsxtransportnodes'] }}"
+    #   when: groups['nsxtransportnodes'] is defined
 
