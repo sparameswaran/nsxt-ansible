@@ -83,7 +83,7 @@ def getCMByName(module, stub_config):
         cm = vs.convert_to(ComputeManager)
         if cm.display_name == module.params['cm_name']:
             return cm
-    module.fail_json(msg='No Compute Manager %s is found, please specift the right cm_name value!' % (module.params['cm_name']))
+    module.fail_json(msg='No Compute Manager %s is found, please specify the right cm_name value!' % (module.params['cm_name']))
     return None
 
 def listCMClusters(module, stub_config):

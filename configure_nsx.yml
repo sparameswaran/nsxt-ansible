@@ -328,7 +328,7 @@
 
     - name: Check for Fabric Node Status failed
       set_fact: failed_flag=failed
-      when: "(item.msg is defined and 'FAILED' in item.msg) or (item.message is defined and 'already exists' not in item.message and item.stderr is defined and 'FAILED' in item.stderr) "
+      when: "groups['nsxtransportnodes'] is defined and ((item.msg is defined and 'FAILED' in item.msg) or (item.message is defined and 'already exists' not in item.message and item.stderr is defined and 'FAILED' in item.stderr) )"
       with_items: 
       - "{{ job_result.results }}"
 
@@ -380,6 +380,7 @@
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       when: hostvars['localhost'].compute_vcenter_manager is defined and groups['nsxtransportnodes'] is not defined
       register: cmp_manager
+      ignore_errors: True
 
     - name: NSX-T Compute Manager Cluster
       nsxt_cm_cluster:
@@ -390,12 +391,14 @@
         transport_zone_endpoints: 
           - "{{ hostvars['localhost'].overlay_tz_name }}"
         host_switch:
-          - name: "{{ hostvars['localhost'].hostswitch }}"
-            static_ip_pool_id: "{{ ippool.id }}"
-            pnics:
-              uplink-1: "{{ hostvars['localhost']['uplink-1'] }}"
-              uplink-2: "{{ hostvars['localhost']['uplink-2'] }}"
-            uplink_profile: "{{ hostvars['localhost'].esxi_uplink_profile_name }}"
+          - name: "{{ hostvars['localhost'].overlay_hostswitch }}"
+            static_ip_pool_id: "{{ tepippool.id }}"
+            pnics: "{{ esxi_uplink_vmnics }}"
+            uplink_profile: "{{ hostvars['localhost'].esxi_overlay_profile_name }}"
+            # pnics:
+            #   uplink-1: "{ hostvars['localhost']['uplink-1'] }"
+            #   uplink-2: "{ hostvars['localhost']['uplink-2'] }"
+            # uplink_profile: "{ hostvars['localhost'].esxi_uplink_profile_name }"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
