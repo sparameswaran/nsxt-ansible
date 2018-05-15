@@ -328,7 +328,7 @@
 
     - name: Check for Fabric Node Status failed
       set_fact: failed_flag=failed
-      when: "groups['nsxtransportnodes'] is defined and ((item.msg is defined and 'FAILED' in item.msg) or (item.message is defined and 'already exists' not in item.message and item.stderr is defined and 'FAILED' in item.stderr) )"
+      when: "groups['nsxtransportnodes'] is defined and ((item.msg is defined and 'already exists' not in item.msg and 'FAILED' in item.msg) or (item.message is defined and 'already exists' not in item.message and item.stderr is defined and 'FAILED' in item.stderr) )"
       with_items: 
       - "{{ job_result.results }}"
 
@@ -366,6 +366,14 @@
       when: groups['nsxtransportnodes'] is defined
       register: tnode
 
+    - name: Check for Esxi Transport Node Status failed
+      set_fact: failed_flag=failed
+      when: "groups['nsxtransportnodes'] is defined and ((item.msg is defined and 'already exists' not in item.msg and 'FAILED' in item.msg) or (item.message is defined and 'already exists' not in item.message and item.stderr is defined and 'FAILED' in item.stderr) )"
+      with_items: 
+      - "{{ tnode.results }}"
+
+    - fail: msg="Check Esxi Transport Node Status Failed"
+      when: failed_flag is defined
 
     - name: NSX-T Compute Manager
       nsxt_compute_manager:
