@@ -1,0 +1,43 @@
+---
+- name: Deploy NSX-T Mgr OVA
+  hosts: localhost
+  gather_facts: False
+  tasks:
+    - name: deploy NSX Manager
+      deploy_ova:
+        ovftool_path: "{{ hostvars['localhost'].ovfToolPath }}"
+        datacenter: "{{ hostvars[item]['dc'] }}"
+        datastore: "{{ hostvars[item]['datastore'] }}"
+        portgroup: "{{ hostvars[item]['portgroup'] }}"
+        cluster: "{{ hostvars[item]['cluster'] }}"
+        vmname: "{{ hostvars[item]['vmname'] }}"
+        hostname: "{{ hostvars[item]['hostname'] }}"
+        dns_server: "{{ hostvars['localhost'].dns_server }}"
+        dns_domain: "{{ hostvars['localhost'].dns_domain }}"
+        ntp_server: "{{ hostvars['localhost'].ntp_server }}"
+        gateway: "{{ hostvars[item]['gw'] }}"
+        ip_address: "{{ hostvars[item].ansible_ssh_host }}"
+        netmask: "{{ hostvars[item]['mask'] }}"
+        admin_password: "{{ hostvars[item].ansible_ssh_pass }}"
+        cli_password: "{{ hostvars[item].ansible_ssh_pass }}"
+        ssh_enabled: "{{ hostvars['localhost'].sshEnabled }}"
+        allow_ssh_root_login: "{{ hostvars['localhost'].allowSSHRootAccess }}"
+        path_to_ova: "{{ hostvars['localhost'].nsxOvaPath }}"
+        ova_file: "{{ hostvars['localhost'].managerOva }}"
+        vcenter: "{{ hostvars['localhost'].deployVcIPAddress }}"
+        vcenter_user: "{{ hostvars['localhost'].deployVcUser }}"
+        vcenter_passwd: "{{ hostvars['localhost'].deployVcPassword }}"
+        deployment_size: "{{ hostvars['localhost'].nsx_t_mgr_deploy_size }}"
+      with_items: "{{ groups['nsxmanagers'] }}"
+      async: 7200
+      poll: 0
+      register: deploy_nsx_man
+    - name: Wait 4 minutes before start deploying controllers
+      pause: minutes=4
+    - name: Check if NSX Managers deployment has finished
+      async_status:
+        jid: "{{ item.ansible_job_id }}"
+      register: job_result
+      until: job_result.finished
+      with_items: "{{ deploy_nsx_man.results }}"
+      retries: 100
