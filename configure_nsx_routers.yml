@@ -22,7 +22,8 @@
         display_name: "{{ item.name }}"
         description: "IP Block created by Ansible"
         cidr: "{{ item.cidr }}"
-        tags: "{{ item.tags }}" 
+        #tags: "{item.tags}" 
+        tags: "{{ item.tags if item.tags is defined else { 'test-tagA': 'test-valA'}  }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -43,7 +44,8 @@
             #dns_nameservers:
             #  - "{ item.nameserver }"
             #dns_suffix: "{ item.dns_domain }"            
-        tags: "{{ item.tags }}"
+        #tags: "{item.tags}" 
+        tags: "{{ item.tags if item.tags is defined else { 'test-tagA': 'test-valA'}  }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'

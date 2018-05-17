@@ -192,7 +192,7 @@
       nsxt_t0_uplink:
         display_name: "uplink-{{ t0_router.name}}-1"
         description: "{{ t0_router.name}} T0 Uplink"
-        edge_cluster_member: "{{ groups['nsxedges'][0] }}"
+        edge_cluster_member: "{{ groups['nsxedges'][t0_router.edge_indexes.primary - 1] if t0_router.edge_indexes is defined else groups['nsxedges'][0] }}"
         urpf: 'NONE'
         t0_router: "{{ t0_router.name }}"
         logical_switch_port_id: "{{ uplink_lsp.id }}"
@@ -222,7 +222,7 @@
       nsxt_t0_uplink:
         display_name: "uplink-{{ t0_router.name}}-2"
         description: "{{ t0_router.name}} T0 Uplink"
-        edge_cluster_member: "{{ groups['nsxedges'][1] }}"
+        edge_cluster_member: "{{ groups['nsxedges'][t0_router.edge_indexes.secondary - 1] if t0_router.edge_indexes is defined else groups['nsxedges'][1] }}"
         urpf: 'NONE'
         t0_router: "{{ t0_router.name}}"
         logical_switch_port_id: "{{ uplink_lsp2.id }}"
