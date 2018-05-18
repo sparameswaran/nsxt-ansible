@@ -34,8 +34,8 @@
       async: 7200
       poll: 0
       register: deploy_nsx_edges
-    - name: Wait 5 minutes before starting to verify the deployment
-      pause: minutes=5
+    - name: Wait 10 minutes before starting to verify the deployment
+      pause: minutes=10
     - name: Check if NSX Edges deployment has finished
       async_status:
         jid: "{{ item.ansible_job_id }}"
