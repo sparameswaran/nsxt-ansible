@@ -316,6 +316,9 @@
       async: 7200
       poll: 0
 
+    - name: Wait 3 minutes before checking for Fabric status
+      pause: minutes=3
+
     - name: Check Fabric Node Status
       async_status: jid={{ item.ansible_job_id }}
       register: job_result
