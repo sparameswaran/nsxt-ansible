@@ -11,6 +11,7 @@
         transport_type: 'OVERLAY'
         tags:
           ncp/cluster: "{{ hostvars['localhost'].tag }}"
+          ncp/shared_resource: 'true'
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
