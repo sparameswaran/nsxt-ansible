@@ -34,7 +34,7 @@
       async: 7200
       poll: 0
       when: hostvars['localhost'].edge_vcenter_host is not defined or hostvars['localhost'].edge_vcenter_host == '' or hostvars['localhost'].edge_vcenter_host == 'null'
-      register: deploy_nsx_edges
+      register: deploy_nsx_edges_with_mgmt_vcenter
     - name: deploy NSX Edge Gw OVA using separate Edge vCenter
       deploy_ova:
         ovftool_path: "{{ hostvars['localhost'].ovfToolPath }}"
@@ -66,7 +66,7 @@
       async: 7200
       poll: 0
       when: hostvars['localhost'].edge_vcenter_host is defined and hostvars['localhost'].edge_vcenter_host != '' and hostvars['localhost'].edge_vcenter_host != 'null'
-      register: deploy_nsx_edges
+      register: deploy_nsx_edges_with_separate_vcenter
     - name: Wait 10 minutes before starting to verify the deployment
       pause: minutes=10
     - name: Check if NSX Edges deployment has finished
@@ -74,5 +74,14 @@
         jid: "{{ item.ansible_job_id }}"
       register: job_result
       until: job_result.finished
-      with_items: "{{ deploy_nsx_edges.results }}"
+      with_items: "{{ deploy_nsx_edges_with_mgmt_vcenter.results }}"
+      when: deploy_nsx_edges_with_mgmt_vcenter is defined
+      retries: 100
+    - name: Check if NSX Edges deployment has finished
+      async_status:
+        jid: "{{ item.ansible_job_id }}"
+      register: job_result
+      until: job_result.finished
+      with_items: "{{ deploy_nsx_edges_with_separate_vcenter.results }}"
+      when: deploy_nsx_edges_with_separate_vcenter is defined
       retries: 100
