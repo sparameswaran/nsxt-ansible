@@ -19,8 +19,9 @@
 
 __author__ = 'yasensim'
 
-
+import os
 import requests, time
+
 try:
     from com.vmware.nsx.model_client import Tag
     from com.vmware.nsx.model_client import EdgeCluster
@@ -80,6 +81,28 @@ def simplifyClusterMembersList(memberList):
         idList.append(member.transport_node_id)
     return idList
 
+def findTag(tags, key):
+    for tag in tags:
+        if tag.scope == key:
+            return tag
+    return None
+
+def compareTags(existing_tags, new_tags):
+    if existing_tags is None or new_tags is None:
+        return False
+
+    for tag1 in new_tags:
+        key = tag1.scope
+        if key == 'generated' or key == 'modified':
+            continue
+
+        tag2 =  findTag(existing_tags, key)
+        if tag2 is None:
+            return False
+
+        if tag1.tag != tag2.tag:
+            return False
+    return True
 
 def main():
     module = AnsibleModule(
@@ -107,9 +130,11 @@ def main():
     security_context = create_user_password_security_context(module.params["nsx_username"], module.params["nsx_passwd"])
     connector.set_security_context(security_context)
     requests.packages.urllib3.disable_warnings()
-    tags=None
+
+    tags=[ ]
+    tags.append(Tag(scope='created-by', tag=os.getenv("NSX_T_INSTALLER", "nsx-t-gen") ) )
+
     if module.params['tags'] is not None:
-        tags = []
         for key, value in module.params['tags'].items():
             tag=Tag(scope=key, tag=value)
             tags.append(tag)
@@ -126,6 +151,7 @@ def main():
     ec = getEdgeClusterByName(module, stub_config)
     if module.params['state'] == 'present':
         if ec is None:
+            tags.append(Tag(scope='generated', tag=time.strftime("%Y-%m-%d %H:%M:%S %z") ) )
             new_ec = EdgeCluster(
                 display_name=module.params['display_name'],
                 description=module.params['description'],
@@ -138,7 +164,9 @@ def main():
             module.exit_json(changed=True, object_name=module.params['display_name'], id=new_ec.id, message="Edge Cluster with name %s created!"%(module.params['display_name']))
         elif ec:
             changed = False
-            if tags != ec.tags:
+            if not compareTags(ec.tags, tags):
+                tags.append(findTag(ec.tags, 'generated'))
+                tags.append(Tag(scope='modified', tag=time.strftime("%Y-%m-%d %H:%M:%S %z") ) )
                 ec.tags=tags
                 changed = True
             desiredList = []

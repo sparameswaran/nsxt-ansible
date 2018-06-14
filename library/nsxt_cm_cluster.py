@@ -19,8 +19,9 @@
 
 __author__ = 'yasensim'
 
-
+import os
 import requests, time
+
 try:
     from com.vmware.nsx.fabric_client import ComputeManagers
     from com.vmware.nsx.model_client import ComputeManager
@@ -274,9 +275,13 @@ def main():
     security_context = create_user_password_security_context(module.params["nsx_username"], module.params["nsx_passwd"])
     connector.set_security_context(security_context)
     requests.packages.urllib3.disable_warnings()
-    tags=None
+    #tags=None
+    tags=[ ]
+    tags.append(Tag(scope='generated', tag=time.strftime("%Y-%m-%d %H:%M:%S %z") ) )
+    tags.append(Tag(scope='created-by', tag=os.getenv("NSX_T_INSTALLER", "nsx-t-gen") ) )
+
     if module.params['tags'] is not None:
-        tags = []
+        #tags = []
         for key, value in module.params['tags'].items():
             tag=Tag(scope=key, tag=value)
             tags.append(tag)

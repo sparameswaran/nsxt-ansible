@@ -19,8 +19,9 @@
 
 __author__ = 'yasensim'
 
-
+import os
 import requests, time
+
 try:
     from com.vmware.nsx.model_client import Tag
     from com.vmware.nsx.model_client import LogicalRouter
@@ -69,8 +70,8 @@ def connectT0(t1, module, stub_config):
     lrp_svc = LogicalRouterPorts(stub_config)
 
     t0_lrp=LogicalRouterLinkPortOnTIER0(
-        display_name="t0-downlink-to_%s"%(t1.display_name), 
-        logical_router_id=module.params['connected_t0_id'], 
+        display_name="t0-downlink-to_%s"%(t1.display_name),
+        logical_router_id=module.params['connected_t0_id'],
         description=t1.id
     )
     try:
@@ -81,8 +82,8 @@ def connectT0(t1, module, stub_config):
         module.fail_json(msg='API Error creating T0 port: %s'%(api_error.error_message))
 
     t1_lrp=LogicalRouterLinkPortOnTIER1(
-        display_name="%s-uplinklink-to_t0"%(t1.display_name), 
-        description=module.params['connected_t0_id'], 
+        display_name="%s-uplinklink-to_t0"%(t1.display_name),
+        description=module.params['connected_t0_id'],
         logical_router_id=t1.id,
         linked_logical_router_port_id=ResourceReference(target_id=t0port.id)
     )
@@ -136,6 +137,29 @@ def compareLrpT0T1(lr, module, stub_config):
 
     return changed
 
+def findTag(tags, key):
+    for tag in tags:
+        if tag.scope == key:
+            return tag
+    return None
+
+def compareTags(existing_tags, new_tags):
+    if existing_tags is None or new_tags is None:
+        return False
+
+    for tag1 in new_tags:
+        key = tag1.scope
+        if key == 'generated' or key == 'modified':
+            continue
+
+        tag2 =  findTag(existing_tags, key)
+        if tag2 is None:
+            return False
+
+        if tag1.tag != tag2.tag:
+            return False
+    return True
+
 def main():
     module = AnsibleModule(
         argument_spec=dict(
@@ -183,9 +207,12 @@ def main():
         if 'advertise_static_routes' in module.params['advertise'] and module.params['advertise']['advertise_static_routes']:
             desired_adv_config.advertise_static_routes = module.params['advertise']['advertise_static_routes']
 
-    tags=None
+    #tags=None
+    tags=[ ]
+    tags.append(Tag(scope='created-by', tag=os.getenv("NSX_T_INSTALLER", "nsx-t-gen") ) )
+
     if module.params['tags'] is not None:
-        tags = []
+        #tags = []
         for key, value in module.params['tags'].items():
             tag=Tag(scope=key, tag=value)
             tags.append(tag)
@@ -193,6 +220,7 @@ def main():
     lr = getLogicalRouterByName(module, stub_config)
     if module.params['state'] == 'present':
         if lr is None:
+            tags.append(Tag(scope='generated', tag=time.strftime("%Y-%m-%d %H:%M:%S %z") ) )
             new_lr = LogicalRouter(
                 display_name=module.params['display_name'],
                 description=module.params['description'],
@@ -226,8 +254,11 @@ def main():
             adv_svc = Advertisement(stub_config)
             adv_config = adv_svc.get(lr.id)
             changed = False
-            if tags != lr.tags:
+            #if tags != lr.tags:
+            if not compareTags(lr.tags, tags):
                 changed = True
+                tags.append(findTag(lr.tags, 'generated'))
+                tags.append(Tag(scope='modified', tag=time.strftime("%Y-%m-%d %H:%M:%S %z") ) )
                 lr.tags=tags
             if module.params['edge_cluster_id'] != lr.edge_cluster_id:
                 lr.edge_cluster_id=module.params['edge_cluster_id']
@@ -261,7 +292,7 @@ def main():
                 elif module.params['advertise']['advertise_lb_vip'] != adv_config.advertise_lb_vip:
                     adv_config.advertise_lb_vip = desired_adv_config.advertise_lb_vip
                     changed = True
- 
+
                 if ('advertise_nat_routes' not in module.params['advertise']):
                     if adv_config.advertise_nat_routes:
                         adv_config.advertise_nat_routes = None
