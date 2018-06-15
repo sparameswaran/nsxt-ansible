@@ -30,6 +30,7 @@
         vcenter_user: "{{ hostvars['localhost'].deployVcUser }}"
         vcenter_passwd: "{{ hostvars['localhost'].deployVcPassword }}"
         deployment_size: "{{ hostvars['localhost'].nsx_t_edge_deploy_size }}"
+        resource_pool: "{{ hostvars[item].resource_pool }}"
       with_items: "{{ groups['nsxedges'] }}"
       async: 7200
       poll: 0
