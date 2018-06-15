@@ -83,7 +83,8 @@ def main():
             vcenter=dict(required=True, type='str'),
             vcenter_user=dict(required=True, type='str'),
             vcenter_passwd=dict(required=True, type='str', no_log=True),
-            deployment_size=dict(required=False, type='str')
+            deployment_size=dict(required=False, type='str'),
+            resource_pool=dict(required=False, type='str')
         ),
         supports_check_mode=True,
         required_together=[['portgroup_ext', 'portgroup_transport']]
@@ -112,7 +113,7 @@ def main():
 
     # Support switching deployment size
     if module.params['deployment_size'] and module.params['deployment_size'] != '':
-        ovf_base_options.extend(['--deploymentOption={}'.format(module.params['deployment_size'])])    
+        ovf_base_options.extend(['--deploymentOption={}'.format(module.params['deployment_size'])])
 
     if module.params['portgroup_ext']:
         ovf_base_options.extend(['--net:Network 0={}'.format(module.params['portgroup']),
@@ -141,6 +142,10 @@ def main():
     vi_string = 'vi://{}:{}@{}/{}/host/{}/'.format(module.params['vcenter_user'],
                                                    module.params['vcenter_passwd'], module.params['vcenter'],
                                                    module.params['datacenter'], module.params['cluster'])
+                                                   
+    if resource_pool is not None and resource_pool != '':
+        vi_string = '%s/Resources/%s' % (vi_string, resource_pool)
+
     ovf_command.append(vi_string)
 
     if module.check_mode:
