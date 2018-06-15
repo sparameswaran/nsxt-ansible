@@ -142,7 +142,8 @@ def main():
     vi_string = 'vi://{}:{}@{}/{}/host/{}/'.format(module.params['vcenter_user'],
                                                    module.params['vcenter_passwd'], module.params['vcenter'],
                                                    module.params['datacenter'], module.params['cluster'])
-                                                   
+
+    resource_pool = module.params['resource_pool']                                           
     if resource_pool is not None and resource_pool != '':
         vi_string = '%s/Resources/%s' % (vi_string, resource_pool)
 
