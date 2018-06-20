@@ -55,6 +55,19 @@
         - { path: "{{ nsx_controller_path }}", ovf_filename: "{{ nsx_controller_ovf }}", ova_filename: "{{ nsx_controller_filename }}" }
         - { path: "{{ nsx_gw_path }}", ovf_filename: "{{ nsx_gw_ovf }}", ova_filename: "{{ nsx_gw_filename }}" }
       tags: extract
+      register: ova_extract
+      async: 4000
+      poll: 0
+
+    - name: Wait 2 minutes before checking for extraction status
+      pause: minutes=2
+
+    - name: ova extraction result check
+      async_status: jid={{ item.ansible_job_id }}
+      register: job_result
+      until: job_result.finished
+      with_items: "{{ ova_extract.results }}"
+      retries: 100
 
     - name: remove reservations from OVF Files
       lineinfile:
@@ -106,7 +119,7 @@
     #     - { regexp: "<rasd:VirtualQuantity>16384</rasd:VirtualQuantity>", replace: "<rasd:VirtualQuantity>{{nsx_t_sizing.edge.memory}}</rasd:VirtualQuantity>" }
     #     - { regexp: "32768MB of memory", replace: "{{nsx_t_sizing.edge.memory}} MB of memory" }
     #     - { regexp: "<rasd:VirtualQuantity>32768</rasd:VirtualQuantity>", replace: "<rasd:VirtualQuantity>{{nsx_t_sizing.edge.memory}}</rasd:VirtualQuantity>" }
-  
+
     #   tags: downsize_nsxcont
 
     - name: calculate new NSX Manager OVF File Checksum
@@ -171,6 +184,19 @@
         - { path: "{{ nsx_controller_path }}", ovf_filename: "{{ nsx_controller_ovf }}", ova_filename: "{{ nsx_controller_filename }}" }
         - { path: "{{ nsx_gw_path }}", ovf_filename: "{{ nsx_gw_ovf }}", ova_filename: "{{ nsx_gw_filename }}" }
       tags: compact
+      register: ova_compact
+      async: 4000
+      poll: 0
+
+    - name: Wait 2 minutes before checking for compaction status
+      pause: minutes=2
+
+    - name: compaction result check
+      async_status: jid={{ item.ansible_job_id }}
+      register: job_result
+      until: job_result.finished
+      with_items: "{{ ova_compact.results }}"
+      retries: 100
 
     - name: remove OVF Folders with all Files
       file: path="{{ ova_file_path }}/{{ item }}" state=absent
@@ -179,4 +205,3 @@
         - "{{ nsx_controller_path }}"
         - "{{ nsx_gw_path }}"
       tags: delete_paths
-

@@ -168,7 +168,7 @@
         description: "T0 Uplink VLAN Logical Switch"
         transport_zone_id: "{{ vlan_tzone.id }}"
         vlan: "{{ t0_router.vlan_uplink }}"
-        tags: "{{ t0_router.tags }}" 
+        tags: "{{ t0_router.tags }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -317,8 +317,9 @@
       poll: 0
 
     - name: Wait 3 minutes before checking for Fabric status
+      when: "groups['nsxtransportnodes'] is defined"
       pause: minutes=3
-
+      
     - name: Check Fabric Node Status
       async_status: jid={{ item.ansible_job_id }}
       register: job_result
@@ -333,7 +334,7 @@
     - name: Check for Fabric Node Status failed
       set_fact: failed_flag=failed
       when: "groups['nsxtransportnodes'] is defined and ((item.msg is defined and 'already exists' not in item.msg and 'FAILED' in item.msg) or (item.message is defined and 'already exists' not in item.message and item.stderr is defined and 'FAILED' in item.stderr) )"
-      with_items: 
+      with_items:
       - "{{ job_result.results }}"
 
     - fail: msg="Check Fabric Node Status Failed"
@@ -350,7 +351,7 @@
         #   - "{{ hostvars['localhost'].overlay_tz_name }}"
         # pnics: "{{ esxi_uplink_vmnics }}"
         # uplink_profile: "{{ hostvars['localhost'].esxi_overlay_profile_name }}"
-        transport_zone_endpoints: 
+        transport_zone_endpoints:
           - "{{ hostvars['localhost'].overlay_tz_name }}"
           # Commenting off the vlan transport as its not required for esxi - check
           #- "{{ hostvars['localhost'].vlan_tz_name }}"
@@ -373,7 +374,7 @@
     - name: Check for Esxi Transport Node Status failed
       set_fact: failed_flag=failed
       when: "groups['nsxtransportnodes'] is defined and ((item.msg is defined and 'already exists' not in item.msg and 'FAILED' in item.msg) or (item.message is defined and 'already exists' not in item.message and item.stderr is defined and 'FAILED' in item.stderr) )"
-      with_items: 
+      with_items:
       - "{{ tnode.results }}"
 
     - fail: msg="Check Esxi Transport Node Status Failed"
@@ -400,7 +401,7 @@
         cm_name: "{{ hostvars['localhost'].compute_vcenter_manager }}"
         auto_install_nsx: True
         create_transport_node: True
-        transport_zone_endpoints: 
+        transport_zone_endpoints:
           - "{{ hostvars['localhost'].overlay_tz_name }}"
         host_switch:
           - name: "{{ hostvars['localhost'].overlay_hostswitch }}"
@@ -417,4 +418,3 @@
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
       when: groups['nsxtransportnodes'] is not defined
       register: cmcluster
-
