@@ -53,9 +53,9 @@
           - cidr: "{{ hostvars['localhost'].tep_pool_cidr }}"
             allocation_ranges:
               - "{{ hostvars['localhost'].tep_pool_range }}"
-            dns_nameservers:
-              - "{{ hostvars['localhost'].tep_pool_nameserver }}"
-            dns_suffix: "{{ hostvars['localhost'].tep_pool_suffix }}"
+            #dns_nameservers:
+            #  - "{ hostvars['localhost'].tep_pool_nameserver }"
+            #dns_suffix: "{ hostvars['localhost'].tep_pool_suffix }"
             gateway_ip: "{{ hostvars['localhost'].tep_pool_gw }}"
         tags:
           ncp/cluster: "{{ hostvars['localhost'].tag }}"
@@ -319,7 +319,7 @@
     - name: Wait 3 minutes before checking for Fabric status
       when: "groups['nsxtransportnodes'] is defined"
       pause: minutes=3
-      
+
     - name: Check Fabric Node Status
       async_status: jid={{ item.ansible_job_id }}
       register: job_result
