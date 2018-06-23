@@ -14,9 +14,9 @@
         cluster: "{{ hostvars[item]['cluster'] }}"
         vmname: "{{ hostvars[item]['vmname'] }}"
         hostname: "{{ hostvars[item]['hostname'] }}"
-        dns_server: "{{ hostvars['localhost'].dns_server }}"
-        dns_domain: "{{ hostvars['localhost'].dns_domain }}"
-        ntp_server: "{{ hostvars['localhost'].ntp_server }}"
+        dns_server: "{{ hostvars[item].dns_server }}"
+        dns_domain: "{{ hostvars[item].dns_domain }}"
+        ntp_server: "{{ hostvars[item].ntp_server }}"
         gateway: "{{ hostvars[item]['gw'] }}"
         ip_address: "{{ hostvars[item].ansible_ssh_host }}"
         netmask: "{{ hostvars[item]['mask'] }}"
@@ -26,22 +26,24 @@
         allow_ssh_root_login: "{{ hostvars['localhost'].allowSSHRootAccess }}"
         path_to_ova: "{{ hostvars['localhost'].nsxOvaPath }}"
         ova_file: "{{ hostvars['localhost'].edgeOva }}"
-        vcenter: "{{ hostvars['localhost'].deployVcIPAddress }}"
-        vcenter_user: "{{ hostvars['localhost'].deployVcUser }}"
-        vcenter_passwd: "{{ hostvars['localhost'].deployVcPassword }}"
+        vcenter: "{{ hostvars[item].vcenter_host }}"
+        vcenter_user: "{{ hostvars[item].vcenter_user }}"
+        vcenter_passwd: "{{ hostvars[item].vcenter_pwd }}"
         deployment_size: "{{ hostvars['localhost'].nsx_t_edge_deploy_size }}"
         resource_pool: "{{ hostvars[item].resource_pool }}"
       with_items: "{{ groups['nsxedges'] }}"
       async: 7200
       poll: 0
-      register: deploy_nsx_edges_with_mgmt_vcenter
-    - name: Wait 10 minutes before starting to verify the deployment
-      pause: minutes=10
+      register: deploy_nsx_edges
+    - name: Wait 6 minutes before starting to verify the deployment
+      pause: minutes=6
     - name: Check if NSX Edges deployment has finished
       async_status:
         jid: "{{ item.ansible_job_id }}"
       register: job_result
       until: job_result.finished
       with_items: "{{ deploy_nsx_edges_with_mgmt_vcenter.results }}"
-      when: deploy_nsx_edges_with_mgmt_vcenter is defined
-      retries: 100
+      when: deploy_nsx_edges is defined
+      retries: 200
+    - name: Wait additional 2 minutes before starting next steps
+      pause: minutes=2
