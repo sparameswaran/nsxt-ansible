@@ -100,8 +100,30 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
-      when: hostvars['localhost'].esxi_overlay_profile_name is defined
+      when: hostvars['localhost'].esxi_overlay_profile_name is defined and groups['nsxtransportnodes'] is defined
       register: host_overlay_prof
+
+    - name: Host Overlay Profile
+      nsxt_uplink_profile:
+        display_name: "{{ hostvars['localhost'].esxi_overlay_profile_name }}-{{item.compute_cluster_name}}"
+        description: "Host Overlay Profile"
+        mtu: "{{ hostvars['localhost'].esxi_overlay_profile_mtu }}"
+        active_list:
+          - uplink-1
+          - uplink-2
+        policy: "LOADBALANCE_SRCID"
+        transport_vlan: "{{ item.overlay_profile_vlan }}"
+        tags:
+          ncp/cluster: "{{ hostvars['localhost'].tag }}"
+        state: present
+        nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+        nsx_username: 'admin'
+        nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+      when: hostvars['localhost'].esxi_overlay_profile_name is defined and groups['nsxtransportnodes'] is not defined
+      with_items: "{{ compute_vcenters }}"
+      register: host_overlay_prof
+
+
 
     - name: NSX-T Edge Transport Node
       nsxt_transport_node:
@@ -380,25 +402,37 @@
     - fail: msg="Check Esxi Transport Node Status Failed"
       when: failed_flag is defined
 
-    - name: NSX-T Compute Manager
+
+        ova_file: "{{ hostvars['localhost'].controllerOva }}"
+        vcenter: "{{ hostvars['localhost'].deployVcIPAddress }}"
+        vcenter_user: "{{ hostvars['localhost'].deployVcUser }}"
+        vcenter_passwd: "{{ hostvars['localhost'].deployVcPassword }}"
+        resource_pool: "{{ hostvars[item].resource_pool }}"
+      with_items: "{{ groups['nsxcontrollers'] }}"
+      async: 7200
+      poll: 0
+      register: deploy_nsx_ctrl
+
+    - name: NSX-T Compute Managers
       nsxt_compute_manager:
-        display_name: "{{ hostvars['localhost'].compute_vcenter_manager }}"
-        server: "{{ hostvars['localhost'].compute_vcenter_host }}"
-        username: "{{ hostvars['localhost'].compute_vcenter_user }}"
-        passwd: "{{ hostvars['localhost'].compute_vcenter_password }}"
+        display_name: "{{ item.item.compute_cluster_name }}"
+        server: "{{ item.vcenter_host }}"
+        username: "{{ item.vcenter_user }}"
+        passwd: "{{ item.vcenter_password }}"
         origin_type: "vCenter"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
-      when: hostvars['localhost'].compute_vcenter_manager is defined and groups['nsxtransportnodes'] is not defined
-      register: cmp_manager
+      when: compute_vcenters is defined and groups['nsxtransportnodes'] is not defined
+      register: compute_vcenters
       ignore_errors: True
+      with_items: "{{ compute_vcenters }}"
 
-    - name: NSX-T Compute Manager Cluster
+    - name: NSX-T Compute Manager Clusters
       nsxt_cm_cluster:
-        display_name: "{{ hostvars['localhost'].compute_vcenter_cluster }}"
-        cm_name: "{{ hostvars['localhost'].compute_vcenter_manager }}"
+        display_name: "{{ item.vcenter_cluster }}"
+        cm_name: "{{ item.compute_cluster_name }}"
         auto_install_nsx: True
         create_transport_node: True
         transport_zone_endpoints:
@@ -407,7 +441,7 @@
           - name: "{{ hostvars['localhost'].overlay_hostswitch }}"
             static_ip_pool_id: "{{ tepippool.id }}"
             pnics: "{{ esxi_uplink_vmnics }}"
-            uplink_profile: "{{ hostvars['localhost'].esxi_overlay_profile_name }}"
+            uplink_profile: "{{ hostvars['localhost'].esxi_overlay_profile_name }}-{{item.compute_cluster_name}}"
             # pnics:
             #   uplink-1: "{ hostvars['localhost']['uplink-1'] }"
             #   uplink-2: "{ hostvars['localhost']['uplink-2'] }"
@@ -416,5 +450,45 @@
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
         nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
-      when: groups['nsxtransportnodes'] is not defined
-      register: cmcluster
+      when: compute_vcenters is defined and groups['nsxtransportnodes'] is not defined
+      register: cmclusters
+      with_items: "{{ compute_vcenters }}"
+
+    # - name: NSX-T Compute Manager
+    #   nsxt_compute_manager:
+    #     display_name: "{{ hostvars['localhost'].compute_vcenter_manager }}"
+    #     server: "{{ hostvars['localhost'].compute_vcenter_host }}"
+    #     username: "{{ hostvars['localhost'].compute_vcenter_user }}"
+    #     passwd: "{{ hostvars['localhost'].compute_vcenter_password }}"
+    #     origin_type: "vCenter"
+    #     state: present
+    #     nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+    #     nsx_username: 'admin'
+    #     nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+    #   when: hostvars['localhost'].compute_vcenter_manager is defined and groups['nsxtransportnodes'] is not defined
+    #   register: cmp_manager
+    #   ignore_errors: True
+    #
+    # - name: NSX-T Compute Manager Cluster
+    #   nsxt_cm_cluster:
+    #     display_name: "{{ hostvars['localhost'].compute_vcenter_cluster }}"
+    #     cm_name: "{{ hostvars['localhost'].compute_vcenter_manager }}"
+    #     auto_install_nsx: True
+    #     create_transport_node: True
+    #     transport_zone_endpoints:
+    #       - "{{ hostvars['localhost'].overlay_tz_name }}"
+    #     host_switch:
+    #       - name: "{{ hostvars['localhost'].overlay_hostswitch }}"
+    #         static_ip_pool_id: "{{ tepippool.id }}"
+    #         pnics: "{{ esxi_uplink_vmnics }}"
+    #         uplink_profile: "{{ hostvars['localhost'].esxi_overlay_profile_name }}"
+    #         # pnics:
+    #         #   uplink-1: "{ hostvars['localhost']['uplink-1'] }"
+    #         #   uplink-2: "{ hostvars['localhost']['uplink-2'] }"
+    #         # uplink_profile: "{ hostvars['localhost'].esxi_uplink_profile_name }"
+    #     state: present
+    #     nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
+    #     nsx_username: 'admin'
+    #     nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
+    #   when: groups['nsxtransportnodes'] is not defined
+    #   register: cmcluster
