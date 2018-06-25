@@ -406,8 +406,8 @@
       nsxt_compute_manager:
         display_name: "{{ item.compute_cluster_name }}"
         server: "{{ item.vcenter_host }}"
-        username: "{{ item.vcenter_user }}"
-        passwd: "{{ item.vcenter_password }}"
+        username: "{{ item.vcenter_usr }}"
+        passwd: "{{ item.vcenter_pwd }}"
         origin_type: "vCenter"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
