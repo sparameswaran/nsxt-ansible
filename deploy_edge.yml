@@ -42,7 +42,7 @@
         jid: "{{ item.ansible_job_id }}"
       register: job_result
       until: job_result.finished
-      with_items: "{{ deploy_nsx_edges_with_mgmt_vcenter.results }}"
+      with_items: "{{ deploy_nsx_edges.results }}"
       when: deploy_nsx_edges is defined
       retries: 200
     - name: Wait additional 2 minutes before starting next steps
