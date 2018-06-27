@@ -163,6 +163,14 @@ def createHostSwitchList(module, stub_config):
             value=uplink_profile_id
         )
         hsprof_list.append(hsptie)
+        pnics = hostswitch["pnics"]
+        if isinstance(pnics, basestring) or isinstance(pnics, str):
+            current_pnics = pnics
+            pnics = []
+            index=1
+            for token in pnics.trim().split(','):
+                pnics['uplink-' + index] = token
+
         for key, value in hostswitch["pnics"].items():
             pnic=Pnic(device_name=value, uplink_name=key)
             pnic_list.append(pnic)
