@@ -167,6 +167,7 @@ def main():
             description=dict(required=False, type='str', default=None),
             failover_mode=dict(required=False, type='str', default=None, choices=['NON_PREEMPTIVE', 'PREEMPTIVE']),
             edge_cluster_id=dict(required=False, type='str', default=None),
+            pinned_to_edges=dict(required=False, type='str', default=None),
             connected_t0_id=dict(required=False, type='str', default=None),
             high_availability_mode=dict(required=False, type='str', default='ACTIVE_STANDBY', choices=['ACTIVE_STANDBY', 'ACTIVE_ACTIVE']),
             advertise=dict(required=False, type='dict', default=None),
@@ -221,11 +222,17 @@ def main():
     if module.params['state'] == 'present':
         if lr is None:
             tags.append(Tag(scope='generated', tag=time.strftime("%Y-%m-%d %H:%M:%S %z") ) )
+            edge_cluster_id=module.params['edge_cluster_id']
+            pinned_to_edges=module.params['pinned_to_edges']
+            if (pinned_to_edges is None or  pinned_to_edges == '' or pinned_to_edges != 'true') \
+                    and 'ERT' not in module.params['display_name']:
+                edge_cluster_id = None
+
             new_lr = LogicalRouter(
                 display_name=module.params['display_name'],
                 description=module.params['description'],
                 failover_mode=module.params['failover_mode'],
-                edge_cluster_id=module.params['edge_cluster_id'],
+                edge_cluster_id=edge_cluster_id,
                 router_type='TIER1',
                 high_availability_mode=module.params['high_availability_mode'],
                 tags=tags

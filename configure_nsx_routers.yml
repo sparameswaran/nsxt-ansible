@@ -2,7 +2,7 @@
 - hosts: localhost
   connection: local
   gather_facts: True
-  
+
   tasks:
     - name: NSX-T Overlay Transport Zone
       nsxt_transport_zone:
@@ -22,7 +22,7 @@
         display_name: "{{ item.name }}"
         description: "IP Block created by Ansible"
         cidr: "{{ item.cidr }}"
-        #tags: "{item.tags}" 
+        #tags: "{item.tags}"
         tags: "{{ item.tags if item.tags is defined else { 'test-tagA': 'test-valA'}  }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
@@ -43,8 +43,8 @@
             gateway_ip: "{{ item.gateway }}"
             #dns_nameservers:
             #  - "{ item.nameserver }"
-            #dns_suffix: "{ item.dns_domain }"            
-        #tags: "{item.tags}" 
+            #dns_suffix: "{ item.dns_domain }"
+        #tags: "{item.tags}"
         tags: "{{ item.tags if item.tags is defined else { 'test-tagA': 'test-valA'}  }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
@@ -60,7 +60,7 @@
         description: "Default T0"
         edge_cluster_id: "{{ edge_cluster.id }}" # Comes from previous run configure_nsx.yml
         high_availability_mode: "{{ t0_router.ha_mode }}"
-        tags: "{{ t0_router.tags }}" 
+        tags: "{{ t0_router.tags }}"
         state: present
         nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
         nsx_username: 'admin'
@@ -71,9 +71,10 @@
       nsxt_t1_logical_router:
         display_name: "{{ item.name}}"
         description: "{{ item.name}}"
-        edge_cluster_id: "{{ edge_cluster.id }}" # Comes from previous run configure_nsx.yml
+        edge_cluster_id: "{{ edge_cluster.id }}"                    # Comes from previous run configure_nsx.yml
+        pinned_to_edges: "{{ item.pinned_to_edges|default(omit) }}" # Pin to edge only for those requesting it
         connected_t0_id: "{{ t0.id }}"
-        tags: "{{ t0_router.tags }}" 
+        tags: "{{ t0_router.tags }}"
         advertise:
           enabled: True
           advertise_lb_snat_ip: False
@@ -103,7 +104,7 @@
           display_name: "{{ item.1.name }}"
           description: "{{ item.1.name }}"
           transport_zone_id: "{{ overlay_tzone.id }}"
-          tags: "{{ t0_router.tags }}" 
+          tags: "{{ t0_router.tags }}"
           state: present
           nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
           nsx_username: 'admin'
@@ -155,7 +156,7 @@
           display_name: "{{ item.item.1.name}} Port"
           description: "{{ item.item.1.name}} Port"
           logical_switch_id: "{{ item.id }}"
-          tags: "{{ t0_router.tags }}" 
+          tags: "{{ t0_router.tags }}"
           state: present
           nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
           nsx_username: 'admin'
@@ -294,7 +295,7 @@
 # }
 
 
-      
+
       #- debug: msg="{{lsp.results[0].item.item}}" # To get the t1_router structure with router & logical switch name
 # Sample output
 # ok: [localhost] => {
@@ -332,14 +333,14 @@
           subnets:
             - ip_addresses: [ "{{ item.item.item.1.logical_switch_gw}}" ]
               prefix_length: "{{ item.item.item.1.subnet_mask}}"
-          tags: "{{ t0_router.tags }}" 
+          tags: "{{ t0_router.tags }}"
           state: present
           nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
           nsx_username: 'admin'
           nsx_passwd: "{{ hostvars['nsx-manager'].ansible_ssh_pass }}"
         register: lrdp
         with_items: "{{ lsp.results }}"
-       
+
     # - name: Remove previous SSH keys from known_hosts - NSX nodes
     #   command: ssh-keygen -R "{{ hostvars[item]['ansible_ssh_host'] }}"
     #   register: command_result
@@ -350,4 +351,3 @@
     #   shell: mkdir -p ~/.ssh; ssh-keyscan -H "{{ hostvars[item]['ansible_ssh_host'] }}" >> ~/.ssh/known_hosts
     #   with_items: "{{ groups['nsxtransportnodes'] }}"
     #   when: groups['nsxtransportnodes'] is defined
-  

@@ -420,7 +420,7 @@
       ignore_errors: True
       with_items: "{{ compute_managers }}"
 
-    - name: NSX-T Compute Manager Clusters
+    - name: NSX-T Add Compute Manager Clusters
       nsxt_cm_cluster:
         display_name: "{{ item.1.vcenter_cluster }}"
         cm_name: "{{ item.0.vcenter_name }}"
