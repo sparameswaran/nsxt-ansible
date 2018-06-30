@@ -166,7 +166,7 @@ def createHostSwitchList(module, stub_config):
         given_pnics = hostswitch["pnics"]
         if isinstance(given_pnics, basestring) or isinstance(given_pnics, str):
             index=1
-            for token in given_pnics.trim().split(','):
+            for token in given_pnics.strip().split(','):
                 pnic=Pnic(device_name=token, uplink_name='uplink-' + str(index))
                 pnic_list.append(pnic)
 
