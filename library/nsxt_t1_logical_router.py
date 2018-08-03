@@ -224,8 +224,7 @@ def main():
             tags.append(Tag(scope='generated', tag=time.strftime("%Y-%m-%d %H:%M:%S %z") ) )
             edge_cluster_id=module.params['edge_cluster_id']
             pinned_to_edges=module.params['pinned_to_edges']
-            if (pinned_to_edges is None or  pinned_to_edges == '' or pinned_to_edges != 'true') \
-                    and 'ERT' not in module.params['display_name']:
+            if not ( pinned_to_edges == 'True' or pinned_to_edges == 'true'): 
                 edge_cluster_id = None
 
             new_lr = LogicalRouter(
