@@ -244,7 +244,7 @@ def createTnTemplate(module, stub_config, cc):
             cctnt_list.results[0].host_switch_spec = real_hs_spec
             cctnt_svc.update(cctnt_list.results[0].id, cctnt_list.results[0])
             module.exit_json(changed=True, msg=str(cctnt_list), id=cctnt_list.results[0].id)
-    except AttributeError:
+    except (AttributeError, IndexError):
         createTransportNodeTemplate(module, stub_config, cc)
         changed = True
     return changed

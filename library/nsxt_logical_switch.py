@@ -26,7 +26,9 @@ try:
     from com.vmware.nsx.model_client import Tag
     from com.vmware.nsx_client import LogicalSwitches
     from com.vmware.nsx.model_client import LogicalSwitch
-
+    from com.vmware.nsx.model_client import TransportZone
+    from com.vmware.nsx_client import TransportZones
+    
     from com.vmware.vapi.std.errors_client import NotFound
     from vmware.vapi.lib import connect
     from vmware.vapi.security.user_password import \
@@ -37,6 +39,24 @@ try:
     HAS_PYNSXT = True
 except ImportError:
     HAS_PYNSXT = False
+
+def listTransportZones(module, stub_config):
+    tz_list = []
+    try:
+        tz_svc = TransportZones(stub_config)
+        tz_list = tz_svc.list()
+    except Error as ex:
+        api_error = ex.date.convert_to(ApiError)
+        module.fail_json(msg='API Error listing Transport Zones: %s'%(api_error.error_message))
+    return tz_list
+
+def getTransportZoneByName(module, stub_config):
+    result = listTransportZones(module, stub_config)
+    for vs in result.results:
+        tz = vs.convert_to(TransportZone)
+        if tz.display_name == module.params['transport_zone_name']:
+            return tz
+    return None
 
 def listLogicalSwitches(module, stub_config):
     ls_list = []
@@ -89,7 +109,8 @@ def main():
             mac_pool_id=dict(required=False, type='str', default=None),
             replication_mode=dict(required=False, type='str', default='MTEP', choices=['MTEP', 'SOURCE']),
             switching_profile_ids=dict(required=False, type='list', default=None),
-            transport_zone_id=dict(required=True, type='str'),
+            transport_zone_id=dict(required=False, type='str'),
+            transport_zone_name=dict(required=False, type='str'),
             vlan=dict(required=False, type='int', default=None),
             tags=dict(required=False, type='dict', default=None),
             state=dict(required=False, type='str', default="present", choices=['present', 'absent']),
@@ -122,6 +143,10 @@ def main():
             tags.append(tag)
     ls_svc = LogicalSwitches(stub_config)
     ls = getLogicalSwitchByName(module, stub_config)
+    if not module.params['transport_zone_id']:
+        tz = getTransportZoneByName(module, stub_config)
+        module.params['transport_zone_id'] = tz.id
+
     if module.params['state'] == 'present':
         if ls is None:
             tags.append(Tag(scope='generated', tag=time.strftime("%Y-%m-%d %H:%M:%S %z") ) )
