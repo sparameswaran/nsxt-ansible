@@ -29,13 +29,13 @@
       set_fact: nsx_gw_path="{{ nsx_gw_filename | regex_replace('.ova', '') }}"
       tags: set_facts
     - name: Set target MF Filename for Manager
-      set_fact: nsx_manager_mf="{{ nsx_manager_filename | regex_replace('ova', 'mf') }}"
+      set_fact: nsx_manager_mf="{{ nsx_manager_filename | regex_replace('ova$', 'mf') | regex_replace('ova', 'ovf') }}"
       tags: set_facts
     - name: Set target MF Filename for Controller
-      set_fact: nsx_controller_mf="{{ nsx_controller_filename | regex_replace('ova', 'mf') }}"
+      set_fact: nsx_controller_mf="{{ nsx_controller_filename | regex_replace('ova$', 'mf') | regex_replace('ova', 'ovf') }}"
       tags: set_facts
     - name: Set target MF Filename for Gw
-      set_fact: nsx_gw_mf="{{ nsx_gw_filename | regex_replace('ova', 'mf') }}"
+      set_fact: nsx_gw_mf="{{ nsx_gw_filename | regex_replace('ova$', 'mf') | regex_replace('ova', 'ovf') }}"
       tags: set_facts
 
     - name: create the target OVF folders
