@@ -67,7 +67,7 @@
       register: job_result
       until: job_result.finished
       with_items: "{{ ova_extract.results }}"
-      retries: 100
+      retries: 200
 
     - name: remove reservations from OVF Files
       lineinfile:
@@ -196,7 +196,7 @@
       register: job_result
       until: job_result.finished
       with_items: "{{ ova_compact.results }}"
-      retries: 100
+      retries: 200
 
     - name: remove OVF Folders with all Files
       file: path="{{ ova_file_path }}/{{ item }}" state=absent
