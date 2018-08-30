@@ -188,7 +188,7 @@
 
     - name: NSX-T VLAN Logical Switch for t0 uplink
       nsxt_logical_switch:
-        display_name: "uplink-{{ t0_router.vlan_uplink }}"
+        display_name: "uplink-{{ t0_router.name }}-{{ t0_router.vlan_uplink }}"
         description: "T0 Uplink VLAN Logical Switch"
         transport_zone_id: "{{ vlan_tzone.id }}"
         vlan: "{{ t0_router.vlan_uplink }}"
