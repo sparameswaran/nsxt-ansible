@@ -224,8 +224,12 @@ def main():
             tags.append(Tag(scope='generated', tag=time.strftime("%Y-%m-%d %H:%M:%S %z") ) )
             edge_cluster_id=module.params['edge_cluster_id']
             pinned_to_edges=module.params['pinned_to_edges']
+<<<<<<< HEAD
 
             if not ( pinned_to_edges == 'True' or pinned_to_edges == 'true'):
+=======
+            if not ( pinned_to_edges == 'True' or pinned_to_edges == 'true'): 
+>>>>>>> nsxt-2.1
                 edge_cluster_id = None
 
             new_lr = LogicalRouter(
