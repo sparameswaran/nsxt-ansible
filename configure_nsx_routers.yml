@@ -104,7 +104,7 @@
           display_name: "{{ item.1.name }}"
           description: "{{ item.1.name }}"
           transport_zone_id: "{{ overlay_tzone.id }}"
-          tags: "{{ t0_router.tags }}"
+          #tags: "{{ t0_router.tags }}"
           state: present
           nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
           nsx_username: 'admin'
@@ -156,7 +156,7 @@
           display_name: "{{ item.item.1.name}} Port"
           description: "{{ item.item.1.name}} Port"
           logical_switch_id: "{{ item.id }}"
-          tags: "{{ t0_router.tags }}"
+          #tags: "{{ t0_router.tags }}"
           state: present
           nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
           nsx_username: 'admin'
@@ -333,7 +333,7 @@
           subnets:
             - ip_addresses: [ "{{ item.item.item.1.logical_switch_gw}}" ]
               prefix_length: "{{ item.item.item.1.subnet_mask}}"
-          tags: "{{ t0_router.tags }}"
+          #tags: "{{ t0_router.tags }}"
           state: present
           nsx_manager: "{{ hostvars['nsx-manager'].ansible_ssh_host }}"
           nsx_username: 'admin'
