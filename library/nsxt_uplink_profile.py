@@ -48,7 +48,7 @@ def listProfiles(module, stub_config):
         prof_list = hs_profile_svc.list()
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Hostswitch Profiles: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing Hostswitch Profiles: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return prof_list
 
 def getProfileByName(module, stub_config):

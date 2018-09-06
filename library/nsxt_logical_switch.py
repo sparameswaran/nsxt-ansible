@@ -28,7 +28,7 @@ try:
     from com.vmware.nsx.model_client import LogicalSwitch
     from com.vmware.nsx.model_client import TransportZone
     from com.vmware.nsx_client import TransportZones
-    
+
     from com.vmware.vapi.std.errors_client import NotFound
     from vmware.vapi.lib import connect
     from vmware.vapi.security.user_password import \
@@ -47,7 +47,7 @@ def listTransportZones(module, stub_config):
         tz_list = tz_svc.list()
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Transport Zones: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing Transport Zones: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return tz_list
 
 def getTransportZoneByName(module, stub_config):
@@ -65,7 +65,7 @@ def listLogicalSwitches(module, stub_config):
         ls_list = ls_svc.list()
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Logical Switches: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing Logical Switches: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return ls_list
 
 def getLogicalSwitchByName(module, stub_config):

@@ -45,7 +45,7 @@ def listLogicalRouters(module, stub_config):
         lr_list = lr_svc.list()
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Logical Routers: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing Logical Routers: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return lr_list
 
 def getLogicalRouterByName(module, stub_config):
@@ -93,8 +93,8 @@ def main():
     subnet_list.append(new_subnet)
 
     haVipConfig = [HaVipConfig(
-			enabled=module.params['enabled'], 
-			ha_vip_subnets=subnet_list, 
+			enabled=module.params['enabled'],
+			ha_vip_subnets=subnet_list,
 			redundant_uplink_port_ids=module.params['redundant_uplink_port_ids']
 		)]
 
@@ -109,7 +109,7 @@ def main():
                 module.exit_json(changed=True, object_name=module.params['vip_address'], id=lr.id, message="VIP for Logical Router with name %s was created!"%(lr.display_name))
             except Error as ex:
                 api_error = ex.data.convert_to(ApiError)
-                module.fail_json(msg='API Error creating VIP: %s'%(str(api_error.error_message)))
+                module.fail_json(msg='API Error creating VIP: %s, related error details: %s'%(str(api_error.error_message), str(api_error.related_errors)))
         elif lr.advanced_config.ha_vip_configs != haVipConfig:
                 lr.advanced_config.ha_vip_configs=haVipConfig
                 if module.check_mode:
@@ -130,7 +130,7 @@ def main():
 
             except Error as ex:
                 api_error = ex.date.convert_to(ApiError)
-                module.fail_json(msg='API Error deleting Logical Router VIP: %s'%(api_error.error_message))
+                module.fail_json(msg='API Error deleting Logical Router VIP: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
 
         module.exit_json(changed=False, object_name=module.params['vip_address'], message="Logical Router VIP  %s does not exist!"%(module.params['vip_address']))
 

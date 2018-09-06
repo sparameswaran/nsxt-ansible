@@ -47,7 +47,7 @@ def listIpPools(module, stub_config):
         ippool_list = ippool_svc.list()
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing IP POOLS: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing IP POOLS: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return ippool_list
 
 def getIpPoolByName(module, stub_config):
@@ -63,7 +63,7 @@ def findTag(tags, key):
         if tag.scope == key:
             return tag
     return None
-    
+
 def compareTags(existing_tags, new_tags):
     if existing_tags is None or new_tags is None:
         return False

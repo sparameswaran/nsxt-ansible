@@ -49,7 +49,7 @@ def listLogicalRouters(module, stub_config):
         lr_list = lr_svc.list()
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Logical Routers: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing Logical Routers: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return lr_list
 
 def getLogicalRouterByName(module, stub_config):
@@ -67,7 +67,7 @@ def listStaticRoutes(module, stub_config, lrid):
         lr_list = lr_svc.list(logical_router_id=lrid)
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Logical Routers: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing Logical Routers: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return lr_list
 
 def getStaticRouteByNetwork(module, stub_config, lrid):
@@ -214,7 +214,7 @@ def main():
                 module.exit_json(changed=True, object_name=module.params['network'], message="Static Route for %s deleted!"%(module.params['network']))
             except Error as ex:
                 api_error = ex.date.convert_to(ApiError)
-                module.fail_json(msg='API Error deleting Logical Routers: %s'%(api_error.error_message))
+                module.fail_json(msg='API Error deleting Logical Routers: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
         module.exit_json(changed=False, object_name=module.params['network'], message="Static Route for %s does not exist!"%(module.params['network']))
 
 from ansible.module_utils.basic import *

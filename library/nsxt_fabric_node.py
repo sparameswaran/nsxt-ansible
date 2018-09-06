@@ -44,7 +44,7 @@ def listNodes(module, stub_config):
         fabricnodes_svc = Nodes(stub_config)
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.fail_json(msg='API Error listing nodes: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing nodes: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return fabricnodes_svc.list()
 
 
@@ -65,8 +65,8 @@ def createNode(module, stub_config):
 	os_type=os_type,
 	os_version=module.params['os_version'],
 	host_credential=HostNodeLoginCredential(
-            username=module.params['node_username'], 
-            password=module.params['node_passwd'], 
+            username=module.params['node_username'],
+            password=module.params['node_passwd'],
             thumbprint=module.params['thumbprint']
         )
     )
@@ -74,7 +74,7 @@ def createNode(module, stub_config):
         fnodes_svc.create(newNode)
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.fail_json(msg='API Error creating node: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error creating node: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     time.sleep(20)
     resultNode = getNodeByName(module, stub_config)
     status_svc = Status(stub_config)
@@ -99,7 +99,7 @@ def deleteNode(module, node, stub_config):
         api_error = ex.data.convert_to(ApiError)
         module.exit_json(changed=False, object_id=node_id, object_name=node_name, message=api_error)
 
-        module.fail_json(msg='API Error Deleting node: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error Deleting node: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     status_svc = Status(stub_config)
     while True:
         try:

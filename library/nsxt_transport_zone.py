@@ -45,7 +45,7 @@ def listTransportZones(module, stub_config):
         tz_list = tz_svc.list()
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Transport Zones: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing Transport Zones: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return tz_list
 
 def getTransportZoneByName(module, stub_config):

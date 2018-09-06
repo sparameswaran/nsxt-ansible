@@ -45,7 +45,7 @@ def listLogicalSwitchPorts(module, stub_config):
         lsp_list = lsp_svc.list()
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Logical Switch Ports: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing Logical Switch Ports: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return lsp_list
 
 def getLogicalSwitchPortByName(module, stub_config):

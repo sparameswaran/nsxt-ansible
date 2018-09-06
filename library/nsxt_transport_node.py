@@ -55,7 +55,7 @@ def listNodes(module, stub_config):
         fabricnodes_svc = Nodes(stub_config)
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.fail_json(msg='API Error listing nodes: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing nodes: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return fabricnodes_svc.list()
 
 def getNodeByName(module, stub_config):
@@ -73,7 +73,7 @@ def getTransportZoneEndPoint(module, stub_config):
         tzs = transportzones_svc.list()
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.exit_json(changed=False, message="Error listing Transport Zones: "%(api_error))
+        module.exit_json(changed=False, message='Error listing Transport Zones: %s'%(api_error))
 
     for tz_name in module.params['transport_zone_endpoints']:
         for vs in tzs.results:
@@ -89,7 +89,7 @@ def getUplinkProfileId(module, stub_config, prof_name):
         hsps = hsp_svc.list()
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.exit_json(changed=False, message="Error listing Transport Zones: "%(api_error))
+        module.exit_json(changed=False, message='Error listing Transport Zones: %s '%(api_error))
 
     for vs in hsps.results:
         fn = vs.convert_to(UplinkHostSwitchProfile)
@@ -129,7 +129,7 @@ def createHostSwitchList(module, stub_config):
 def createTransportNode(module, stub_config):
     tz_endpoints=getTransportZoneEndPoint(module, stub_config)
     # uplink_profile_id=getUplinkProfileId(module, stub_config)
-    
+
     # hsprof_list = []
     # hsptie=HostSwitchProfileTypeIdEntry(
     #     key=HostSwitchProfileTypeIdEntry.KEY_UPLINKHOSTSWITCHPROFILE,
@@ -177,7 +177,7 @@ def createTransportNode(module, stub_config):
             module.fail_json(msg='Transport Node %s Status is Down!'%(module.params["display_name"]))
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.fail_json(msg="API Error creating Transport Node: %s "%(api_error))
+        module.fail_json(msg='API Error creating Transport Node: %s, related error details: %s'%(str(api_error.error_message), str(api_error.related_errors)))
     return rs
 
 
@@ -242,7 +242,7 @@ def updateTransportNode(module, stub_config):
             rs = tn_svc.update(node.id, node)
         except Error as ex:
             api_error = ex.data.convert_to(ApiError)
-            module.fail_json(msg="API Error updating Transport Node: %s "%(api_error))
+            module.fail_json(msg='API Error updating Transport Node: %s, related error details: %s'%(str(api_error.error_message), str(api_error.related_errors)))
     return changed
 
 
@@ -263,7 +263,7 @@ def listTransportNodes(module, stub_config):
         fabricnodes_svc = TransportNodes(stub_config)
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.fail_json(msg='API Error listing nodes: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing nodes: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return fabricnodes_svc.list()
 
 
@@ -283,7 +283,7 @@ def deleteTransportNode(module, node, stub_config):
         fnodes_svc.delete(node_id)
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.fail_json(msg='API Error Deleting node: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error Deleting node: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     time.sleep(5)
     module.exit_json(changed=True, id=node.id, object_name=node_name)
 

@@ -48,7 +48,7 @@ def listEdgeClusters(module, stub_config):
         ec_list = ec_svc.list()
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Edge Clusters: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing Edge Clusters: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return ec_list
 
 def getEdgeClusterByName(module, stub_config):
@@ -64,7 +64,7 @@ def listTransportNodes(module, stub_config):
         fabricnodes_svc = TransportNodes(stub_config)
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.fail_json(msg='API Error listing nodes: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing nodes: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return fabricnodes_svc.list()
 
 def getTransportNodeByName(name, module, stub_config):

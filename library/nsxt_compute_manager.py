@@ -70,7 +70,7 @@ def listComputeManagers(module, stub_config):
         cm_svc = ComputeManagers(stub_config)
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Compute Managers: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing Compute Managers: %s'%(api_error))
     return cm_svc.list()
 
 
@@ -83,8 +83,8 @@ def createComputeManager(module, stub_config):
 	server=module.params['server'],
 	origin_type=module.params['origin_type'],
 	credential=UsernamePasswordLoginCredential(
-            username=module.params['username'], 
-            password=module.params['passwd'], 
+            username=module.params['username'],
+            password=module.params['passwd'],
             thumbprint=module.params['thumbprint']
         )
     )
@@ -94,7 +94,7 @@ def createComputeManager(module, stub_config):
         cm_svc.create(newNode)
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.fail_json(msg='API Error creating Compute Manager: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error creating Compute Manager: %s'%(api_error))
     time.sleep(20)
     resultCm = getCMByName(module, stub_config)
     status_svc = Status(stub_config)
@@ -116,7 +116,7 @@ def deleteCm(module, cm, stub_config):
         cm_svc.delete(cm_id)
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.fail_json(msg='API Error Deleting node: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error Deleting node: %s'%(api_error))
     status_svc = Status(stub_config)
     while True:
         try:

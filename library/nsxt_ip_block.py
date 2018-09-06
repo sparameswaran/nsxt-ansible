@@ -46,7 +46,7 @@ def listIpBlocks(module, stub_config):
         ipblock_list = ipblock_svc.list()
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing IP BLOCKS: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing IP BLOCKS: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return ipblock_list
 
 def getIpBlockByName(module, stub_config):

@@ -47,7 +47,7 @@ def listLogicalRouterPorts(module, stub_config):
         lrp_list = lrp_svc.list(logical_router_id=module.params['logical_router_id'], resource_type='LogicalRouterDownLinkPort')
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Logical Router Ports: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing Logical Router Ports: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return lrp_list
 
 def getLogicalRouterPortByName(module, stub_config):

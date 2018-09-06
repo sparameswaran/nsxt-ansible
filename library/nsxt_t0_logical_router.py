@@ -46,7 +46,7 @@ def listLogicalRouters(module, stub_config):
         lr_list = lr_svc.list()
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Logical Routers: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing Logical Routers: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return lr_list
 
 def getLogicalRouterByName(module, stub_config):
@@ -168,7 +168,7 @@ def main():
                 lr_svc.delete(lr.id)
             except Error as ex:
                 api_error = ex.date.convert_to(ApiError)
-                module.fail_json(msg='API Error deleting Logical Routers: %s'%(api_error.error_message))
+                module.fail_json(msg='API Error deleting Logical Routers: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
 
             module.exit_json(changed=True, object_name=module.params['display_name'], message="Logical Router with name %s deleted!"%(module.params['display_name']))
         module.exit_json(changed=False, object_name=module.params['display_name'], message="Logical Router with name %s does not exist!"%(module.params['display_name']))

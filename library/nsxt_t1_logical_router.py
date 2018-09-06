@@ -52,7 +52,7 @@ def listLogicalRouters(module, stub_config):
         lr_list = lr_svc.list()
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Logical Routers: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing Logical Routers: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return lr_list
 
 def getLogicalRouterByName(module, stub_config):
@@ -79,7 +79,7 @@ def connectT0(t1, module, stub_config):
         t0port = port.convert_to(LogicalRouterLinkPortOnTIER0)
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error creating T0 port: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error creating T0 port: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
 
     t1_lrp=LogicalRouterLinkPortOnTIER1(
         display_name="%s-uplinklink-to_t0"%(t1.display_name),
@@ -91,7 +91,7 @@ def connectT0(t1, module, stub_config):
         t1port = lrp_svc.create(t1_lrp)
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error creating T1 port: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error creating T1 port: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
 
     return True
 
@@ -341,7 +341,7 @@ def main():
                 lr_svc.delete(lr.id)
             except Error as ex:
                 api_error = ex.date.convert_to(ApiError)
-                module.fail_json(msg='API Error deleting Logical Routers: %s'%(api_error.error_message))
+                module.fail_json(msg='API Error deleting Logical Routers: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
 
 
             module.exit_json(changed=True, object_name=module.params['display_name'], message="Logical Router with name %s deleted!"%(module.params['display_name']))

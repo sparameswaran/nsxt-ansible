@@ -53,7 +53,7 @@ def listTransportNodes(module, stub_config):
         fabricnodes_svc = TransportNodes(stub_config)
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.fail_json(msg='API Error listing nodes: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing nodes: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return fabricnodes_svc.list()
 
 
@@ -72,7 +72,7 @@ def listLogicalRouters(module, stub_config):
         lr_list = lr_svc.list()
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Logical Routers: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing Logical Routers: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return lr_list
 
 def getLogicalRouterByName(module, stub_config):
@@ -90,7 +90,7 @@ def listLogicalRouterPorts(module, stub_config, lrid):
         lr_list = lr_svc.list(resource_type='LogicalRouterUpLinkPort', logical_router_id=lrid)
     except Error as ex:
         api_error = ex.date.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Logical Routers: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing Logical Routers: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return lr_list
 
 def getLogicalRouterPortByName(module, stub_config, lrid):
@@ -204,7 +204,7 @@ def main():
                 module.exit_json(changed=True, object_name=module.params['display_name'], id=new_lrp.id, message="Logical Router Port with name %s created!"%(module.params['display_name']))
             except Error as ex:
                 api_error = ex.data.convert_to(ApiError)
-                module.fail_json(msg='API Error creating Logical Router Uplink: %s'%(str(api_error.error_message)))
+                module.fail_json(msg='API Error creating Logical Router Uplink: %s, related error details: %s'%(str(api_error.error_message), str(api_error.related_errors)))
         elif lrp:
             changed = False
             if lrp.linked_logical_switch_port_id.target_id != module.params['logical_switch_port_id']:
@@ -238,7 +238,7 @@ def main():
                 lrp_svc.delete(lrp.id, force=True)
             except Error as ex:
                 api_error = ex.date.convert_to(ApiError)
-                module.fail_json(msg='API Error deleting Logical Router Ports: %s'%(api_error.error_message))
+                module.fail_json(msg='API Error deleting Logical Router Ports: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
 
             module.exit_json(changed=True, object_name=module.params['display_name'], message="Logical Router Port with name %s deleted!"%(module.params['display_name']))
         module.exit_json(changed=False, object_name=module.params['display_name'], message="Logical Router Port with name %s does not exist!"%(module.params['display_name']))

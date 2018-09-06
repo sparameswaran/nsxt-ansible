@@ -74,7 +74,7 @@
         edge_cluster_id: "{{ edge_cluster.id }}"                    # Comes from previous run configure_nsx.yml
         pinned_to_edges: "{{ item.pinned_to_edges|default(omit) }}" # Pin to edge only for those requesting it
         connected_t0_id: "{{ t0.id }}"
-        tags: "{{ t0_router.tags }}"
+        #tags: "{{ t0_router.tags }}"
         advertise:
           enabled: True
           advertise_lb_snat_ip: False

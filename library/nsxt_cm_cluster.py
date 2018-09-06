@@ -75,7 +75,7 @@ def listComputeManagers(module, stub_config):
         cm_list = cm_svc.list()
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Compute Managers: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing Compute Managers: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return cm_list
 
 def getCMByName(module, stub_config):
@@ -95,7 +95,7 @@ def listCMClusters(module, stub_config):
         cc_list = cc_svc.list(origin_id=cm.id)
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Compute Managers: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing Compute Managers: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return cc_list
 
 def getClusterByName(module, stub_config):
@@ -114,7 +114,7 @@ def getFabricTemplates(module, stub_config, cc):
         cc_list = cc_svc.list(compute_collection_id=cc.external_id)
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Compute Managers: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing Compute Managers: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return cc_list
 
 
@@ -127,7 +127,7 @@ def getTransportZoneEndPoint(module, stub_config):
         tzs = transportzones_svc.list()
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.exit_json(changed=False, message="Error listing Transport Zones: "%(api_error))
+        module.exit_json(changed=False, message='Error listing Transport Zones: %s'%(api_error))
 
     for tz_name in module.params['transport_zone_endpoints']:
         for vs in tzs.results:
@@ -143,7 +143,7 @@ def getUplinkProfileId(module, stub_config, prof_name):
         hsps = hsp_svc.list()
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.exit_json(changed=False, message="Error listing Transport Zones: "%(api_error))
+        module.exit_json(changed=False, message='Error listing Transport Zones: %s'%(api_error))
 
     for vs in hsps.results:
         fn = vs.convert_to(UplinkHostSwitchProfile)
@@ -207,7 +207,7 @@ def createTransportNodeTemplate(module, stub_config, cc):
         return rs
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.fail_json(msg="API Error creating Transport Node: %s "%(api_error))
+        module.fail_json(msg='API Error creating Transport Node: %s, related error details: %s'%(str(api_error.error_message), str(api_error.related_errors)))
     return 1
 
 def createTnTemplate(module, stub_config, cc):

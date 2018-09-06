@@ -56,7 +56,7 @@ def migrateVmks(module, stub_config):
         rs = tn_svc.update(node.id, node, ls_ids, module.params["vmks"])
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.fail_json(msg='API Error migratin VMKs on Trnaport Node: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error migratin VMKs on Tranport Node: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     if module.params["pnics"]:
         pnic_list = []
         for key, value in module.params["pnics"].items():
@@ -70,7 +70,7 @@ def migrateVmks(module, stub_config):
             rs = tn_svc.update(migrated_node.id, migrated_node)
         except Error as ex:
             api_error = ex.data.convert_to(ApiError)
-            module.fail_json(msg='API Error updating Trnaport Node: %s'%(api_error.error_message))
+            module.fail_json(msg='API Error updating Tranport Node: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
         module.exit_json(changed=True, id=node.id, name=node.display_name, pnics="updated",message="%s migrated to %s"%(module.params["vmks"], module.params["vlan_logical_switches"]))
 
     module.exit_json(changed=True, id=node.id, name=node.display_name, pnics="not updated",message="%s migrated to %s"%(module.params["vmks"], module.params["vlan_logical_switches"]))
@@ -83,7 +83,7 @@ def listLogicalSwitches(module, stub_config):
         ls_list = logicalswitches_svc.list()
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.fail_json(msg='API Error listing Logical Switchess: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing Logical Switchess: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return ls_list
 
 
@@ -103,7 +103,7 @@ def listTransportNodes(module, stub_config):
         fabricnodes_svc = TransportNodes(stub_config)
     except Error as ex:
         api_error = ex.data.convert_to(ApiError)
-        module.fail_json(msg='API Error listing nodes: %s'%(api_error.error_message))
+        module.fail_json(msg='API Error listing nodes: %s, related error details: %s'%( str(api_error.error_message), str(api_error.related_errors) ))
     return fabricnodes_svc.list()
 
 
